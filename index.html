@@ -555,7 +555,11 @@ td .pill{
         <button class="tab-btn active" data-view="maid">메이드 예약</button>
         <button class="tab-btn" data-view="food">음식 예약</button>
         <button class="tab-btn" data-view="status">예약 현황</button>
-        <button class="tab-btn" data-view="admin" id="adminTab" style="display:none;">관리자 전용</button>
+
+        <!-- ✅ 승인(allowed=true)되면 보임 -->
+        <button class="tab-btn" data-view="admin" id="adminTab" style="display:none;">
+          관리자 전용 <span id="adminTabLock">🔒</span>
+        </button>
       </nav>
 
       <button class="theme-btn" type="button" onclick="toggleTheme()">
@@ -581,7 +585,7 @@ td .pill{
     <ul class="side-list">
       <li>음식 최소 100개부터</li>
       <li>펫 메뉴는 100% 예약제</li>
-      <li>관리자 권한(true) 승인 후 코드 입력창 표시</li>
+      <li>관리자 권한(true) 승인 후 관리자 탭 표시</li>
     </ul>
   </div>
 </aside>
@@ -632,7 +636,7 @@ td .pill{
     <!-- VIEW: MAID -->
     <section id="view-maid" class="view active">
       <h1 class="page-title">메이드 예약</h1>
-      <div class="page-sub">메이드 이름 / 날짜 / 시간 / 예약 고유번호 / 이름 / 총 인원수(직접 입력) / 디스코드 아이디</div>
+      <div class="page-sub">메이드 이름 / 날짜 / 시간 / 예약 고유번호 / 이름 / 총 인원수 / 디스코드 아이디</div>
 
       <div class="grid">
         <section class="card">
@@ -645,26 +649,24 @@ td .pill{
             <label>메이드 이름</label>
             <select id="maidName">
               <option value="">선택해주세요</option>
-              <option>메이드 아리</option>
-              <option>메이드 루나</option>
-              <option>메이드 미유</option>
             </select>
+            <div class="note">※ 메이드 목록은 관리자 전용에서 관리됩니다.</div>
           </div>
 
           <div class="row">
             <div class="field">
               <label>예약 날짜</label>
-              <input type="date" id="maidDate">
+              <select id="maidDate">
+                <option value="">선택해주세요</option>
+              </select>
+              <div class="note">※ 날짜 목록은 관리자 전용에서 관리됩니다.</div>
             </div>
             <div class="field">
               <label>예약 시간</label>
               <select id="maidTime">
                 <option value="">선택해주세요</option>
-                <option>12:00</option>
-                <option>14:00</option>
-                <option>16:00</option>
-                <option>18:00</option>
               </select>
+              <div class="note">※ 시간 목록은 관리자 전용에서 관리됩니다.</div>
             </div>
           </div>
 
@@ -785,7 +787,11 @@ td .pill{
     <!-- VIEW: STATUS -->
     <section id="view-status" class="view">
       <h1 class="page-title">예약 현황</h1>
-      <div class="page-sub">Firestore 실시간 목록 (새로고침해도 유지)</div>
+      <div class="page-sub">
+        Firestore 실시간 목록 (새로고침해도 유지)
+        <br/>
+        <span class="muted-small">* 일반 유저는 “내 예약/주문”만 표시됩니다. 관리자 ON이면 전체가 보입니다.</span>
+      </div>
 
       <div class="status-controls">
         <input id="statusSearch" type="text" placeholder="검색: 예약번호 / 이름 / 디스코드" oninput="renderStatus()">
@@ -859,12 +865,128 @@ td .pill{
     <!-- VIEW: ADMIN -->
     <section id="view-admin" class="view">
       <h1 class="page-title">관리자 전용</h1>
-      <div class="page-sub">관리자 ON 상태에서만 접근 가능합니다.</div>
+      <div class="page-sub">승인(allowed=true) + 관리자 ON 상태에서만 사용 가능합니다.</div>
 
       <div class="grid">
+
+        <!-- 메이드 관리 -->
         <section class="card">
           <div class="card-title">
-            <strong>관리자 도구</strong>
+            <strong>메이드 관리</strong>
+            <span class="badge">CONFIG</span>
+          </div>
+
+          <div class="row">
+            <div class="field">
+              <label>메이드 이름 추가</label>
+              <input id="newMaidName" type="text" placeholder="예: 메이드 아리">
+            </div>
+            <div class="field" style="display:flex;align-items:flex-end;gap:10px;">
+              <button class="btn primary" type="button" onclick="adminAddMaid()" data-admin-only="true">추가</button>
+            </div>
+          </div>
+
+          <div class="table-wrap" style="margin-top:10px;">
+            <table>
+              <thead>
+                <tr><th>이름</th><th>상태</th><th>삭제</th></tr>
+              </thead>
+              <tbody id="adminMaidBody"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- 날짜 관리 -->
+        <section class="card">
+          <div class="card-title">
+            <strong>예약 날짜 관리</strong>
+            <span class="badge">CONFIG</span>
+          </div>
+
+          <div class="row">
+            <div class="field">
+              <label>날짜 추가</label>
+              <input id="newMaidDate" type="date">
+            </div>
+            <div class="field" style="display:flex;align-items:flex-end;gap:10px;">
+              <button class="btn primary" type="button" onclick="adminAddDate()" data-admin-only="true">추가</button>
+            </div>
+          </div>
+
+          <div class="table-wrap" style="margin-top:10px;">
+            <table>
+              <thead>
+                <tr><th>날짜</th><th>삭제</th></tr>
+              </thead>
+              <tbody id="adminDateBody"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- 시간 관리 -->
+        <section class="card">
+          <div class="card-title">
+            <strong>예약 시간 관리</strong>
+            <span class="badge">CONFIG</span>
+          </div>
+
+          <div class="row">
+            <div class="field">
+              <label>시간 추가</label>
+              <input id="newMaidTime" type="text" placeholder="예: 12:00">
+              <div class="note">형식: HH:MM (예: 09:30, 18:00)</div>
+            </div>
+            <div class="field" style="display:flex;align-items:flex-end;gap:10px;">
+              <button class="btn primary" type="button" onclick="adminAddTime()" data-admin-only="true">추가</button>
+            </div>
+          </div>
+
+          <div class="table-wrap" style="margin-top:10px;">
+            <table>
+              <thead>
+                <tr><th>시간</th><th>삭제</th></tr>
+              </thead>
+              <tbody id="adminTimeBody"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- 권한 신청 승인/거절 -->
+        <section class="card">
+          <div class="card-title">
+            <strong>권한 신청 관리</strong>
+            <span class="badge">ACCESS</span>
+          </div>
+
+          <div class="note" style="margin-top:0;">
+            요청 목록에서 승인/거절 처리하세요. 승인하면 해당 사용자에게 관리자 탭이 보입니다.
+          </div>
+
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>업데이트</th>
+                  <th>clientId</th>
+                  <th>상태</th>
+                  <th>승인</th>
+                  <th>거절</th>
+                </tr>
+              </thead>
+              <tbody id="adminAccessBody"></tbody>
+            </table>
+          </div>
+
+          <div class="note">
+            TIP) 승인 후 더 확실히 확인하려면 Firebase 콘솔에서 adminAccess/{clientId} 문서에
+            <b>approvedRid</b>, <b>approvedNick</b> 값을 같이 넣어두면, 로그인 시 일치 검증됩니다.
+          </div>
+        </section>
+
+        <!-- 전체 초기화(삭제) -->
+        <section class="card">
+          <div class="card-title">
+            <strong>데이터 관리</strong>
             <span class="badge">ADMIN</span>
           </div>
 
@@ -874,9 +996,10 @@ td .pill{
 
           <div class="actions">
             <button class="btn ghost" type="button" onclick="clearAllStatus()" data-admin-only="true">전체 초기화(삭제)</button>
-            <button class="btn primary" type="button" onclick="alert('추가 기능 예정')">기능 추가</button>
+            <button class="btn primary" type="button" onclick="alert('추가 기능 예정')" data-admin-only="true">기능 추가</button>
           </div>
         </section>
+
       </div>
     </section>
 
@@ -906,20 +1029,25 @@ td .pill{
 
         <div class="actions" style="margin-top:10px;">
           <button class="btn primary" type="button" onclick="requestAdminAccess()">권한 요청</button>
-          <button class="btn ghost" type="button" onclick="alert('승인되면 코드 입력창이 자동으로 나타납니다.')">안내</button>
+          <button class="btn ghost" type="button" onclick="alert('승인되면 관리자 탭과 로그인 입력창이 표시됩니다.')">안내</button>
         </div>
 
         <div class="admin-mini">
           * 요청하면 Firestore에 로그가 남습니다.<br/>
-          * 관리자가 adminAccess/{내ID}.allowed=true로 승인하면 코드 입력창이 표시됩니다.
+          * 관리자가 adminAccess/{내ID}.allowed=true로 승인하면 관리자 탭이 표시됩니다.
         </div>
       </div>
 
       <!-- 권한 있을 때 -->
       <div id="adminUnlockedBox" style="display:none;">
         <div class="field" style="margin-bottom:10px;">
-          <label>관리자 코드</label>
-          <input id="adminCodeInput" type="password" placeholder="관리자 코드 입력" autocomplete="off">
+          <label>관리자 고유번호</label>
+          <input id="adminRidInput" type="text" placeholder="예: RW-0001" autocomplete="off">
+        </div>
+
+        <div class="field" style="margin-bottom:10px;">
+          <label>관리자 닉네임</label>
+          <input id="adminNickInput" type="text" placeholder="예: 시뚜" autocomplete="off">
         </div>
 
         <div class="admin-row">
@@ -928,7 +1056,8 @@ td .pill{
         </div>
 
         <div class="admin-mini">
-          * 권한 승인(allowed=true)된 사용자만 코드 입력창이 보입니다.
+          * allowed=true 승인된 사용자만 로그인할 수 있습니다.<br/>
+          * (선택) approvedRid/approvedNick가 있으면 일치해야 ON 됩니다.
         </div>
       </div>
     </div>
@@ -942,7 +1071,6 @@ td .pill{
 
 <!-- =========================
      Firebase + Firestore (Module)
-     ✅ Vercel에서 정상 동작 (전역 바인딩/DOM 순서 해결)
 ========================= -->
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
@@ -983,6 +1111,15 @@ td .pill{
   window.adminLogoutFromUI = () => {};
   window.clearAllStatus = () => {};
 
+  window.adminAddMaid = () => {};
+  window.adminDeleteMaid = () => {};
+  window.adminAddDate = () => {};
+  window.adminDeleteDate = () => {};
+  window.adminAddTime = () => {};
+  window.adminDeleteTime = () => {};
+  window.adminApproveAccess = () => {};
+  window.adminDenyAccess = () => {};
+
   /* =========================
      FIREBASE INIT
   ========================= */
@@ -1001,22 +1138,26 @@ td .pill{
   const db = getFirestore(app);
 
   /* =========================
-     STATE (선언 먼저)
+     STATE
   ========================= */
   let isDark = false;
 
-  // ✅ 관리자 코드 1개만 사용
-  const ADMIN_CODE = "RW-ADMIN-0000";
-
   // 권한 승인 여부 (Firestore adminAccess/{clientId}.allowed)
   let isAllowed = false;
+  let allowedDoc = null; // ✅ 승인 문서 원본
 
-  // 실제 관리자 ON 여부 (코드 맞게 입력했을 때만 true)
+  // 실제 관리자 ON 여부
   let isAdmin = false;
 
   // Firestore 실시간 데이터
   let maidReservations = [];
   let foodOrders = [];
+
+  // ✅ 관리자 설정 데이터
+  let configMaids = [];
+  let configDates = [];
+  let configTimes = [];
+  let accessRequests = [];
 
   // Cart
   let cart = [];
@@ -1061,6 +1202,14 @@ td .pill{
     cat_churu:   { name:'캣츄르', price:100, type:'펫(예약제)' },
   };
 
+  function assertAdmin(){
+    if(!isAdmin){
+      alert("관리자 ON 후 사용 가능합니다.");
+      return false;
+    }
+    return true;
+  }
+
   /* =========================
      THEME
   ========================= */
@@ -1082,7 +1231,7 @@ td .pill{
   ========================= */
   function setView(view){
     if(view === "admin" && !isAdmin){
-      alert("관리자 ON 상태에서만 접근 가능합니다.");
+      alert("관리자 ON 상태에서만 접근 가능합니다. (관리자 패널에서 로그인하세요)");
       return;
     }
 
@@ -1119,8 +1268,6 @@ td .pill{
 
   /* =========================
      ADMIN: permission gate + logs
-     - adminAccess/{clientId} : { allowed: true/false }
-     - adminLogs (collection): request_access, code_attempt, logout
   ========================= */
   function setClientIdView(){
     const el = $("clientIdView");
@@ -1134,7 +1281,7 @@ td .pill{
     if(panel.classList.contains("open")){
       setClientIdView();
       if(isAllowed){
-        setTimeout(()=> $("adminCodeInput")?.focus(), 50);
+        setTimeout(()=> $("adminRidInput")?.focus(), 50);
       }
     }
   }
@@ -1157,11 +1304,12 @@ td .pill{
     await setDoc(doc(db, "adminAccess", clientId), {
       clientId,
       allowed: false,
+      status: "pending",           // ✅ 대기/승인/거절
       requestedAt: serverTimestamp(),
       updatedAt: serverTimestamp()
     }, { merge: true });
 
-    alert("권한 요청이 접수되었습니다. 관리자 승인(allowed=true) 후 코드 입력창이 표시됩니다.");
+    alert("권한 요청이 접수되었습니다. 관리자 승인(allowed=true) 후 관리자 탭이 표시됩니다.");
   }
 
   async function adminLoginFromUI(){
@@ -1170,20 +1318,38 @@ td .pill{
       return;
     }
 
-    const inp = $("adminCodeInput");
-    const code = (inp?.value || "").trim();
-    if(inp) inp.value = "";
+    const rid = ($("adminRidInput")?.value || "").trim();
+    const nick = ($("adminNickInput")?.value || "").trim();
+    if(!rid || !nick){
+      alert("고유번호와 닉네임을 입력해주세요.");
+      return;
+    }
 
-    await writeAdminLog("code_attempt", { ok: code === ADMIN_CODE });
+    // ✅ (선택) 승인 문서에 approvedRid/approvedNick가 있으면 일치 검증
+    const ar = String(allowedDoc?.approvedRid || "").trim();
+    const an = String(allowedDoc?.approvedNick || "").trim();
 
-    if(code !== ADMIN_CODE){
-      alert("관리자 코드가 올바르지 않습니다.");
+    let ok = true;
+    if(ar || an){
+      ok = (rid === ar && nick === an);
+    }else{
+      // 승인(true)만 해도 로그인 가능 (입력값은 기록용)
+      ok = true;
+    }
+
+    await writeAdminLog("admin_id_check", { ok, rid, nick, hasApproved: !!(ar || an) });
+
+    if(!ok){
+      alert("관리자 고유번호/닉네임이 승인 정보와 일치하지 않습니다.");
       return;
     }
 
     isAdmin = true;
     updateAdminUI();
     alert("관리자 모드가 활성화되었습니다.");
+
+    $("adminRidInput").value = "";
+    $("adminNickInput").value = "";
   }
 
   async function adminLogoutFromUI(){
@@ -1200,6 +1366,7 @@ td .pill{
     const fabText = $("adminFabText");
 
     const adminTab = $("adminTab");
+    const adminTabLock = $("adminTabLock");
     const lockedBox = $("adminLockedBox");
     const unlockedBox = $("adminUnlockedBox");
 
@@ -1208,7 +1375,7 @@ td .pill{
       if(dot) dot.classList.add("on");
       if(fabText) fabText.textContent = "관리자 ON";
     } else if(isAllowed){
-      if(stateText) stateText.textContent = "CODE READY";
+      if(stateText) stateText.textContent = "LOGIN READY";
       if(dot) dot.classList.remove("on");
       if(fabText) fabText.textContent = "관리자(권한됨)";
     } else {
@@ -1217,22 +1384,32 @@ td .pill{
       if(fabText) fabText.textContent = "관리자";
     }
 
-    // 권한 없으면 요청 UI, 권한 있으면 코드 UI
+    // ✅ 승인되면 관리자 탭 표시
+    if(adminTab){
+      adminTab.style.display = isAllowed ? "" : "none";
+      if(adminTabLock){
+        adminTabLock.textContent = isAdmin ? "🟣" : "🔓";
+      }
+    }
+
+    // 권한 없으면 요청 UI, 권한 있으면 로그인 UI
     if(lockedBox) lockedBox.style.display = isAllowed ? "none" : "";
     if(unlockedBox) unlockedBox.style.display = isAllowed ? "" : "none";
 
-    // 관리자 전용 탭/버튼
-    if(adminTab){
-      adminTab.style.display = isAdmin ? "" : "none";
-      const activeView = document.querySelector(".view.active")?.id;
-      if(!isAdmin && activeView === "view-admin") setView("home");
-    }
-
+    // 관리자 전용 버튼 잠금 처리
     document.querySelectorAll("[data-admin-only='true']").forEach(el => {
       el.disabled = !isAdmin;
       el.style.opacity = isAdmin ? "1" : ".55";
       el.style.cursor = isAdmin ? "pointer" : "not-allowed";
     });
+
+    // 관리자 해제됐는데 관리자 화면 보고 있으면 홈으로
+    const activeView = document.querySelector(".view.active")?.id;
+    if(!isAdmin && activeView === "view-admin") setView("home");
+
+    // 관리자 상태 변화 시 테이블들 갱신
+    renderAdminAccessTable();
+    renderStatus();
   }
 
   /* =========================
@@ -1269,6 +1446,7 @@ td .pill{
 
     await addDoc(collection(db, "maidReservations"), {
       ts: serverTimestamp(),
+      clientId, // ✅ 내 것 구분
       rid, name, discord, maid, date, time, people
     });
 
@@ -1376,6 +1554,7 @@ td .pill{
 
     await addDoc(collection(db, "foodOrders"), {
       ts: serverTimestamp(),
+      clientId, // ✅ 내 것 구분
       rid, name, discord,
       items: cart.map(i => ({...i})),
       totalManwon
@@ -1388,17 +1567,22 @@ td .pill{
 
   /* =========================
      STATUS RENDER
+     - 일반 유저: 내 것만
+     - 관리자 ON: 전체
   ========================= */
   function renderStatus(){
     const qv = ($("statusSearch")?.value || "").trim().toLowerCase();
 
-    $("kpiMaid").textContent = String(maidReservations.length);
-    $("kpiFood").textContent = String(foodOrders.length);
+    const maidVisibleBase = isAdmin ? maidReservations : maidReservations.filter(r => r.clientId === clientId);
+    const foodVisibleBase = isAdmin ? foodOrders : foodOrders.filter(o => o.clientId === clientId);
 
-    const foodTotalManwon = foodOrders.reduce((acc, o) => acc + (o.totalManwon || 0), 0);
+    $("kpiMaid").textContent = String(maidVisibleBase.length);
+    $("kpiFood").textContent = String(foodVisibleBase.length);
+
+    const foodTotalManwon = foodVisibleBase.reduce((acc, o) => acc + (o.totalManwon || 0), 0);
     $("kpiFoodTotal").textContent = manwonToEok(foodTotalManwon);
 
-    const maidFiltered = maidReservations.filter(r => {
+    const maidFiltered = maidVisibleBase.filter(r => {
       if(!qv) return true;
       return (
         String(r.rid || "").toLowerCase().includes(qv) ||
@@ -1411,7 +1595,7 @@ td .pill{
     $("maidStatusBody").innerHTML = maidFiltered.length
       ? maidFiltered.map(r => `
         <tr>
-          <td>${fmtTime(r.ts || new Date())}</td>
+          <td>${r.ts ? fmtTime(r.ts) : "<span class='muted-small'>(처리중)</span>"}</td>
           <td><span class="pill">${r.rid || ""}</span></td>
           <td>${r.name || ""}</td>
           <td>${r.discord || ""}</td>
@@ -1423,7 +1607,7 @@ td .pill{
       `).join("")
       : `<tr><td colspan="8" class="muted-small">표시할 메이드 예약이 없습니다.</td></tr>`;
 
-    const foodFiltered = foodOrders.filter(o => {
+    const foodFiltered = foodVisibleBase.filter(o => {
       if(!qv) return true;
       return (
         String(o.rid || "").toLowerCase().includes(qv) ||
@@ -1438,7 +1622,7 @@ td .pill{
         const detail = (o.items || []).map(i => `${i.name}×${i.qty}`).join(", ");
         return `
           <tr>
-            <td>${fmtTime(o.ts || new Date())}</td>
+            <td>${o.ts ? fmtTime(o.ts) : "<span class='muted-small'>(처리중)</span>"}</td>
             <td><span class="pill">${o.rid || ""}</span></td>
             <td>${o.name || ""}</td>
             <td>${o.discord || ""}</td>
@@ -1450,6 +1634,196 @@ td .pill{
   }
 
   /* =========================
+     CONFIG RENDER (폼 옵션)
+  ========================= */
+  function renderMaidSelect(){
+    const sel = $("maidName");
+    if(!sel) return;
+    const current = sel.value;
+    sel.innerHTML = `<option value="">선택해주세요</option>` +
+      configMaids.map(m => `<option>${m.name}</option>`).join("");
+    if([...sel.options].some(o => o.value === current)) sel.value = current;
+  }
+
+  function renderDateSelect(){
+    const sel = $("maidDate");
+    if(!sel) return;
+    const current = sel.value;
+    sel.innerHTML = `<option value="">선택해주세요</option>` +
+      configDates.map(d => `<option value="${d.date}">${d.date}</option>`).join("");
+    if([...sel.options].some(o => o.value === current)) sel.value = current;
+  }
+
+  function renderTimeSelect(){
+    const sel = $("maidTime");
+    if(!sel) return;
+    const current = sel.value;
+    sel.innerHTML = `<option value="">선택해주세요</option>` +
+      configTimes.map(t => `<option>${t.time}</option>`).join("");
+    if([...sel.options].some(o => o.value === current)) sel.value = current;
+  }
+
+  /* =========================
+     ADMIN CRUD: MAID/DATE/TIME
+  ========================= */
+  async function adminAddMaid(){
+    if(!assertAdmin()) return;
+    const name = ($("newMaidName")?.value || "").trim();
+    if(!name) return alert("메이드 이름을 입력해주세요.");
+
+    await addDoc(collection(db, "config_maids"), {
+      name,
+      active: true,
+      createdAt: serverTimestamp()
+    });
+    $("newMaidName").value = "";
+  }
+
+  async function adminDeleteMaid(id){
+    if(!assertAdmin()) return;
+    if(!confirm("이 메이드를 삭제할까요?")) return;
+    await deleteDoc(doc(db, "config_maids", id));
+  }
+
+  async function adminAddDate(){
+    if(!assertAdmin()) return;
+    const date = ($("newMaidDate")?.value || "").trim();
+    if(!date) return alert("날짜를 선택해주세요.");
+
+    await addDoc(collection(db, "config_maidDates"), {
+      date,
+      active: true,
+      createdAt: serverTimestamp()
+    });
+    $("newMaidDate").value = "";
+  }
+
+  async function adminDeleteDate(id){
+    if(!assertAdmin()) return;
+    if(!confirm("이 날짜를 삭제할까요?")) return;
+    await deleteDoc(doc(db, "config_maidDates", id));
+  }
+
+  function isTimeFormatOK(t){
+    return /^([01]\d|2[0-3]):([0-5]\d)$/.test(t);
+  }
+
+  async function adminAddTime(){
+    if(!assertAdmin()) return;
+    const time = ($("newMaidTime")?.value || "").trim();
+    if(!time) return alert("시간을 입력해주세요.");
+    if(!isTimeFormatOK(time)) return alert("시간 형식이 올바르지 않습니다. 예: 12:00, 09:30");
+
+    await addDoc(collection(db, "config_maidTimes"), {
+      time,
+      active: true,
+      createdAt: serverTimestamp()
+    });
+    $("newMaidTime").value = "";
+  }
+
+  async function adminDeleteTime(id){
+    if(!assertAdmin()) return;
+    if(!confirm("이 시간을 삭제할까요?")) return;
+    await deleteDoc(doc(db, "config_maidTimes", id));
+  }
+
+  /* =========================
+     ADMIN TABLE RENDER
+  ========================= */
+  function renderAdminMaidTable(){
+    const body = $("adminMaidBody");
+    if(!body) return;
+    body.innerHTML = configMaids.length
+      ? configMaids.map(m => `
+        <tr>
+          <td>${m.name}</td>
+          <td><span class="pill">active</span></td>
+          <td><button class="btn small ghost" type="button" onclick="adminDeleteMaid('${m.id}')" data-admin-only="true">삭제</button></td>
+        </tr>
+      `).join("")
+      : `<tr><td colspan="3" class="muted-small">등록된 메이드가 없습니다.</td></tr>`;
+  }
+
+  function renderAdminDateTable(){
+    const body = $("adminDateBody");
+    if(!body) return;
+    body.innerHTML = configDates.length
+      ? configDates.map(d => `
+        <tr>
+          <td>${d.date}</td>
+          <td><button class="btn small ghost" type="button" onclick="adminDeleteDate('${d.id}')" data-admin-only="true">삭제</button></td>
+        </tr>
+      `).join("")
+      : `<tr><td colspan="2" class="muted-small">등록된 날짜가 없습니다.</td></tr>`;
+  }
+
+  function renderAdminTimeTable(){
+    const body = $("adminTimeBody");
+    if(!body) return;
+    body.innerHTML = configTimes.length
+      ? configTimes.map(t => `
+        <tr>
+          <td>${t.time}</td>
+          <td><button class="btn small ghost" type="button" onclick="adminDeleteTime('${t.id}')" data-admin-only="true">삭제</button></td>
+        </tr>
+      `).join("")
+      : `<tr><td colspan="2" class="muted-small">등록된 시간이 없습니다.</td></tr>`;
+  }
+
+  function statusLabel(v){
+    const s = v?.status || (v?.allowed ? "approved" : "pending");
+    if(s === "approved") return `<span class="pill">승인</span>`;
+    if(s === "denied") return `<span class="pill">거절</span>`;
+    return `<span class="pill">대기</span>`;
+  }
+
+  async function adminApproveAccess(docId){
+    if(!assertAdmin()) return;
+    await updateDoc(doc(db, "adminAccess", docId), {
+      allowed: true,
+      status: "approved",
+      updatedAt: serverTimestamp()
+    });
+  }
+
+  async function adminDenyAccess(docId){
+    if(!assertAdmin()) return;
+    await updateDoc(doc(db, "adminAccess", docId), {
+      allowed: false,
+      status: "denied",
+      updatedAt: serverTimestamp()
+    });
+  }
+
+  function renderAdminAccessTable(){
+    const body = $("adminAccessBody");
+    if(!body) return;
+
+    if(!isAdmin){
+      body.innerHTML = `<tr><td colspan="5" class="muted-small">관리자 ON 시 표시됩니다.</td></tr>`;
+      return;
+    }
+
+    body.innerHTML = accessRequests.length
+      ? accessRequests.map(r => {
+          const dt =
+            r.updatedAt?.toDate ? r.updatedAt.toDate() :
+            r.requestedAt?.toDate ? r.requestedAt.toDate() :
+            new Date();
+          return `
+            <tr>
+              <td>${fmtTime(dt)}</td>
+              <td><span class="pill">${r.clientId || r.id}</span></td>
+              <td>${statusLabel(r)}</td>
+              <td><button class="btn small ghost" type="button" onclick="adminApproveAccess('${r.id}')" data-admin-only="true">승인</button></td>
+              <td><button class="btn small ghost" type="button" onclick="adminDenyAccess('${r.id}')" data-admin-only="true">거절</button></td>
+            </tr>`;
+        }).join("")
+      : `<tr><td colspan="5" class="muted-small">권한 요청이 없습니다.</td></tr>`;
+  }
+
+  /* =========================
      FIRESTORE WATCHERS
   ========================= */
   function startFirestoreWatchers(){
@@ -1458,7 +1832,7 @@ td .pill{
     onSnapshot(maidQ, (snap) => {
       maidReservations = snap.docs.map(d => {
         const v = d.data();
-        return { id: d.id, ...v, ts: v.ts?.toDate ? v.ts.toDate() : new Date() };
+        return { id: d.id, ...v, ts: v.ts?.toDate ? v.ts.toDate() : null };
       });
       renderStatus();
     });
@@ -1467,7 +1841,7 @@ td .pill{
     onSnapshot(foodQ, (snap) => {
       foodOrders = snap.docs.map(d => {
         const v = d.data();
-        return { id: d.id, ...v, ts: v.ts?.toDate ? v.ts.toDate() : new Date() };
+        return { id: d.id, ...v, ts: v.ts?.toDate ? v.ts.toDate() : null };
       });
       renderStatus();
     });
@@ -1475,13 +1849,14 @@ td .pill{
     // 권한 문서 감시: adminAccess/{clientId}.allowed
     onSnapshot(doc(db, "adminAccess", clientId), (snap) => {
       if(!snap.exists()){
+        allowedDoc = null;
         isAllowed = false;
-        if(isAdmin){ isAdmin = false; }
+        if(isAdmin) isAdmin = false;
         updateAdminUI();
         return;
       }
-      const v = snap.data();
-      isAllowed = !!v.allowed;
+      allowedDoc = snap.data() || null;
+      isAllowed = !!allowedDoc.allowed;
 
       // 권한 회수되면 관리자 강제 OFF
       if(!isAllowed && isAdmin){
@@ -1489,6 +1864,31 @@ td .pill{
       }
 
       updateAdminUI();
+    });
+  }
+
+  function startConfigWatchers(){
+    onSnapshot(query(collection(db, "config_maids"), orderBy("createdAt", "asc")), (snap) => {
+      configMaids = snap.docs.map(d => ({ id:d.id, ...d.data() })).filter(x => x.active !== false);
+      renderMaidSelect();
+      renderAdminMaidTable();
+    });
+
+    onSnapshot(query(collection(db, "config_maidDates"), orderBy("date", "asc")), (snap) => {
+      configDates = snap.docs.map(d => ({ id:d.id, ...d.data() })).filter(x => x.active !== false);
+      renderDateSelect();
+      renderAdminDateTable();
+    });
+
+    onSnapshot(query(collection(db, "config_maidTimes"), orderBy("time", "asc")), (snap) => {
+      configTimes = snap.docs.map(d => ({ id:d.id, ...d.data() })).filter(x => x.active !== false);
+      renderTimeSelect();
+      renderAdminTimeTable();
+    });
+
+    onSnapshot(query(collection(db, "adminAccess"), orderBy("updatedAt", "desc"), limit(300)), (snap) => {
+      accessRequests = snap.docs.map(d => ({ id:d.id, ...d.data() }));
+      renderAdminAccessTable();
     });
   }
 
@@ -1523,12 +1923,14 @@ td .pill{
       btn.addEventListener("click", () => setView(btn.dataset.view));
     });
 
-    // Enter로 코드 입력 후 로그인
+    // Enter로 로그인
     document.addEventListener("keydown", (e) => {
       const panel = $("adminPanel");
       if(!panel?.classList.contains("open")) return;
-      if(e.key === "Enter" && document.activeElement?.id === "adminCodeInput"){
-        adminLoginFromUI();
+      if(e.key === "Enter"){
+        if(document.activeElement?.id === "adminNickInput"){
+          adminLoginFromUI();
+        }
       }
     });
 
@@ -1546,12 +1948,16 @@ td .pill{
     renderStatus();
     updateAdminUI();
     startHomeSlideshow();
+
+    // Firestore watchers
     startFirestoreWatchers();
+    startConfigWatchers();
+
     setClientIdView();
   });
 
   /* =========================
-     ✅ 전역(window) 바인딩 (인라인 onclick용)
+     ✅ 전역(window) 바인딩
   ========================= */
   window.setView = setView;
   window.toggleTheme = toggleTheme;
@@ -1571,6 +1977,16 @@ td .pill{
 
   window.renderStatus = renderStatus;
   window.clearAllStatus = clearAllStatus;
+
+  window.adminAddMaid = adminAddMaid;
+  window.adminDeleteMaid = adminDeleteMaid;
+  window.adminAddDate = adminAddDate;
+  window.adminDeleteDate = adminDeleteDate;
+  window.adminAddTime = adminAddTime;
+  window.adminDeleteTime = adminDeleteTime;
+
+  window.adminApproveAccess = adminApproveAccess;
+  window.adminDenyAccess = adminDenyAccess;
 </script>
 
 </body>
