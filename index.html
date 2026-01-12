@@ -4,10 +4,14 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Reservation</title>
-  <link rel="stylesheet" href="./assets/css/style.css">
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="./style.css">
 </head>
 
 <body>
+
+<!-- ================= TOPBAR ================= -->
 <header class="topbar">
   <div class="topbar-inner">
     <div class="brand">
@@ -22,7 +26,9 @@
         <button class="tab-btn active" data-view="maid">메이드 예약</button>
         <button class="tab-btn" data-view="food">음식 예약</button>
         <button class="tab-btn" data-view="status">예약 현황</button>
-        <button class="tab-btn" data-view="admin" id="adminTab" style="display:none;">관리자 전용</button>
+        <button class="tab-btn" data-view="admin" id="adminTab" style="display:none;">
+          관리자 전용
+        </button>
       </nav>
 
       <button class="theme-btn" type="button" onclick="toggleTheme()">
@@ -33,13 +39,13 @@
   </div>
 </header>
 
+<!-- ================= SIDEBAR ================= -->
 <aside class="sidebar">
   <div class="side-card">
     <div class="side-title">안내</div>
     <div class="side-text">
       메이드 예약은 “예약하기”로 접수됩니다.<br/>
-      음식 예약은 “담기 → 주문 확정”으로 접수됩니다.<br/>
-      (Firestore 저장 · 새로고침 유지)
+      음식 예약은 “담기 → 주문 확정”으로 접수됩니다.
     </div>
   </div>
 
@@ -48,70 +54,31 @@
     <ul class="side-list">
       <li>음식 최소 100개부터</li>
       <li>펫 메뉴는 100% 예약제</li>
-      <li>관리자 권한(true) 승인 후 코드 입력창 표시</li>
+      <li>관리자 승인 후 관리자 코드 입력</li>
     </ul>
   </div>
 </aside>
 
+<!-- ================= MAIN ================= -->
 <main class="main">
   <div class="content">
 
-    <!-- VIEW: HOME -->
+    <!-- HOME -->
     <section id="view-home" class="view">
       <h1 class="page-title">메인</h1>
-      <div class="page-sub">환영합니다. 메이드/음식 예약을 빠르게 진행해보세요.</div>
-
-      <div class="home-hero">
-        <div class="hero-media" aria-label="단체사진 슬라이드">
-          <div class="hero-badge">📸 단체사진</div>
-          <div class="slide active" id="slideA" style="background-image:url('https://i.imgur.com/boRgmMJ.jpeg');"></div>
-          <div class="slide" id="slideB" style="background-image:url('https://i.imgur.com/WL8Xvbb.jpeg');"></div>
-        </div>
-
-        <div class="hero-copy">
-          <div>
-            <h2 class="hero-title">Maid & Food<br/>Reservation</h2>
-            <p class="hero-desc">
-              단체 예약부터 음식 주문까지 한 번에.<br/>
-              상단 탭으로 이동하거나 아래 버튼으로 바로 시작하세요.
-            </p>
-
-            <div class="hero-actions">
-              <button class="btn primary" type="button" onclick="setView('maid')">메이드 예약</button>
-              <button class="btn ghost" type="button" onclick="setView('food')">음식 예약</button>
-            </div>
-
-            <div class="note">※ 메인 사진은 2장이 천천히 교차 전환됩니다.</div>
-          </div>
-
-          <div class="side-card tip" style="margin:0; box-shadow:none;">
-            <div class="side-title">예약 규칙</div>
-            <ul class="side-list" style="margin-bottom:0;">
-              <li>음식은 최소 100개부터</li>
-              <li>펫 메뉴는 100% 예약제</li>
-              <li>현황 탭에서 검색/집계 확인</li>
-            </ul>
-          </div>
-        </div>
-      </div>
+      <div class="page-sub">예약 시스템에 오신 걸 환영합니다.</div>
     </section>
 
-    <!-- VIEW: MAID -->
+    <!-- MAID -->
     <section id="view-maid" class="view active">
       <h1 class="page-title">메이드 예약</h1>
-      <div class="page-sub">메이드 이름 / 날짜 / 시간 / 예약 고유번호 / 이름 / 총 인원수(직접 입력) / 디스코드 아이디</div>
 
       <div class="grid">
         <section class="card">
-          <div class="card-title">
-            <strong>예약 정보</strong>
-            <span class="badge">필수</span>
-          </div>
-
           <div class="field">
             <label>메이드 이름</label>
             <select id="maidName">
-              <option value="">선택해주세요</option>
+              <option value="">선택</option>
               <option>메이드 아리</option>
               <option>메이드 루나</option>
               <option>메이드 미유</option>
@@ -120,13 +87,13 @@
 
           <div class="row">
             <div class="field">
-              <label>예약 날짜</label>
+              <label>날짜</label>
               <input type="date" id="maidDate">
             </div>
             <div class="field">
-              <label>예약 시간</label>
+              <label>시간</label>
               <select id="maidTime">
-                <option value="">선택해주세요</option>
+                <option value="">선택</option>
                 <option>12:00</option>
                 <option>14:00</option>
                 <option>16:00</option>
@@ -138,276 +105,100 @@
           <div class="row">
             <div class="field">
               <label>예약 고유번호</label>
-              <input type="text" id="maidRid" placeholder="예: RW-0001">
+              <input id="maidRid" placeholder="RW-0001">
             </div>
             <div class="field">
               <label>이름</label>
-              <input type="text" id="maidUser" placeholder="이름">
+              <input id="maidUser">
             </div>
           </div>
 
           <div class="row">
             <div class="field">
               <label>총 인원수</label>
-              <input type="number" id="maidPeople" placeholder="예: 3" min="1" step="1">
+              <input type="number" id="maidPeople" min="1">
             </div>
             <div class="field">
-              <label>디스코드 아이디</label>
-              <input type="text" id="maidDiscord" placeholder="username#0000 또는 @username">
+              <label>디스코드</label>
+              <input id="maidDiscord">
             </div>
           </div>
 
           <div class="actions">
-            <button class="btn ghost" type="button" onclick="resetMaidForm()">초기화</button>
-            <button class="btn primary" type="button" onclick="submitMaid()">예약하기</button>
+            <button class="btn ghost" onclick="resetMaidForm()">초기화</button>
+            <button class="btn primary" onclick="submitMaid()">예약하기</button>
           </div>
-
-          <div class="note">※ “예약하기”를 누르면 Firestore에 저장되고, 예약 현황에 실시간 반영됩니다.</div>
         </section>
       </div>
     </section>
 
-    <!-- VIEW: FOOD -->
+    <!-- FOOD -->
     <section id="view-food" class="view">
       <h1 class="page-title">음식 예약</h1>
-      <div class="page-sub">담기 방식 · 최소 100개 · 펫 메뉴는 예약제</div>
-
-      <div class="food-layout">
-
-        <section class="card">
-          <div class="card-title">
-            <strong>담기</strong>
-            <span class="badge">최소 100개</span>
-          </div>
-
-          <div class="field">
-            <label>메뉴</label>
-            <select id="foodMenu">
-              <optgroup label="일반 메뉴 (최소 100개)">
-                <option value="americano">아메리카노 (100만원)</option>
-                <option value="strawberry">딸바 스무디 (200만원)</option>
-                <option value="toast">전남친 토스트 (100만원)</option>
-              </optgroup>
-              <optgroup label="펫 메뉴 (100% 예약제 · 최소 100개)">
-                <option value="pet_water">펫 워터 (100만원 · 예약제)</option>
-                <option value="pet_mineral">펫 미네랄 워터 (200만원 · 예약제)</option>
-                <option value="cat_churu">캣츄르 (100만원 · 예약제)</option>
-              </optgroup>
-            </select>
-          </div>
-
-          <div class="field">
-            <label>수량 (최소 100개)</label>
-            <input type="number" id="foodQty" value="100" min="100" step="1">
-          </div>
-
-          <div class="row">
-            <div class="field">
-              <label>예약 고유번호</label>
-              <input type="text" id="foodRid" placeholder="예: FOOD-0001">
-            </div>
-            <div class="field">
-              <label>이름</label>
-              <input type="text" id="foodUser" placeholder="이름">
-            </div>
-          </div>
-
-          <div class="field">
-            <label>디스코드 아이디</label>
-            <input type="text" id="foodDiscord" placeholder="username#0000 또는 @username">
-          </div>
-
-          <div class="actions">
-            <button class="btn primary" type="button" onclick="addToCart()">담기</button>
-            <button class="btn ghost" type="button" onclick="clearCart()">초기화</button>
-          </div>
-
-          <div class="note">※ “초기화”는 장바구니를 비웁니다.</div>
-        </section>
-
-        <section class="card">
-          <div class="card-title">
-            <strong>🛒 장바구니</strong>
-            <span class="badge">보기</span>
-          </div>
-
-          <ul id="cartList" class="cart-list"></ul>
-
-          <div class="cart-total">
-            <span>총합</span>
-            <span><strong id="cartTotal">0</strong> 억</span>
-          </div>
-
-          <div class="cart-actions">
-            <button class="btn ghost small" type="button" onclick="clearCart()">비우기</button>
-            <button class="btn primary small" type="button" onclick="confirmFoodOrder()">주문 확정</button>
-          </div>
-
-          <div class="note">※ “주문 확정”을 누르면 Firestore에 저장되고, 현황에 실시간 반영됩니다.</div>
-        </section>
-
-      </div>
+      <!-- food UI는 app.js에서 동작 -->
     </section>
 
-    <!-- VIEW: STATUS -->
+    <!-- STATUS -->
     <section id="view-status" class="view">
       <h1 class="page-title">예약 현황</h1>
-      <div class="page-sub">Firestore 실시간 목록 (새로고침해도 유지)</div>
-
-      <div class="status-controls">
-        <input id="statusSearch" type="text" placeholder="검색: 예약번호 / 이름 / 디스코드" oninput="renderStatus()">
-        <span class="muted-small">* 검색은 즉시 필터링됩니다.</span>
-      </div>
 
       <div class="kpi-grid">
         <div class="kpi">
-          <div class="label">메이드 예약 건수</div>
+          <div class="label">메이드</div>
           <div class="value" id="kpiMaid">0</div>
         </div>
         <div class="kpi">
-          <div class="label">음식 주문 건수</div>
+          <div class="label">음식</div>
           <div class="value" id="kpiFood">0</div>
-        </div>
-        <div class="kpi">
-          <div class="label">음식 총합(억)</div>
-          <div class="value" id="kpiFoodTotal">0</div>
         </div>
       </div>
 
-      <div class="grid">
-        <section class="card">
-          <div class="card-title">
-            <strong>메이드 예약 목록</strong>
-            <span class="badge">현황</span>
-          </div>
-          <div class="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>접수시간</th>
-                  <th>예약번호</th>
-                  <th>이름</th>
-                  <th>디스코드</th>
-                  <th>메이드</th>
-                  <th>날짜</th>
-                  <th>시간</th>
-                  <th>인원</th>
-                </tr>
-              </thead>
-              <tbody id="maidStatusBody"></tbody>
-            </table>
-          </div>
-        </section>
-
-        <section class="card">
-          <div class="card-title">
-            <strong>음식 주문 목록</strong>
-            <span class="badge">현황</span>
-          </div>
-          <div class="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>접수시간</th>
-                  <th>예약번호</th>
-                  <th>이름</th>
-                  <th>디스코드</th>
-                  <th>총합(억)</th>
-                  <th>상세</th>
-                </tr>
-              </thead>
-              <tbody id="foodStatusBody"></tbody>
-            </table>
-          </div>
-        </section>
+      <div class="table-wrap">
+        <table>
+          <tbody id="maidStatusBody"></tbody>
+        </table>
       </div>
     </section>
 
-    <!-- VIEW: ADMIN -->
+    <!-- ADMIN -->
     <section id="view-admin" class="view">
       <h1 class="page-title">관리자 전용</h1>
-      <div class="page-sub">관리자 ON 상태에서만 접근 가능합니다.</div>
-
-      <div class="grid">
-        <section class="card">
-          <div class="card-title">
-            <strong>관리자 도구</strong>
-            <span class="badge">ADMIN</span>
-          </div>
-
-          <div class="note" style="margin-top:0;">
-            아래 기능은 관리자 ON에서만 사용 가능합니다.
-          </div>
-
-          <div class="actions">
-            <button class="btn ghost" type="button" onclick="clearAllStatus()" data-admin-only="true">전체 초기화(삭제)</button>
-            <button class="btn primary" type="button" onclick="alert('추가 기능 예정')">기능 추가</button>
-          </div>
-        </section>
-      </div>
+      <button class="btn ghost" onclick="clearAllStatus()">전체 삭제</button>
     </section>
 
   </div>
 </main>
 
-<!-- Floating Admin Login -->
+<!-- ================= ADMIN FLOAT ================= -->
 <div class="admin-fab">
   <div class="admin-panel" id="adminPanel">
     <div class="admin-panel-head">
       <strong>관리자 로그인</strong>
-      <span class="admin-state" id="adminStateText">LOCK</span>
+      <span id="adminStateText">LOCK</span>
     </div>
 
     <div class="admin-panel-body">
-      <!-- 권한 없을 때 -->
       <div id="adminLockedBox">
-        <div class="note" style="margin-top:0;">
-          관리자 권한이 필요합니다.<br/>
-          아래 버튼으로 권한을 요청하세요.
-        </div>
-
-        <div class="field" style="margin:10px 0 0 0;">
-          <label>내 요청 ID (관리자가 allowed=true로 승인)</label>
-          <input id="clientIdView" type="text" readonly>
-        </div>
-
-        <div class="actions" style="margin-top:10px;">
-          <button class="btn primary" type="button" onclick="requestAdminAccess()">권한 요청</button>
-          <button class="btn ghost" type="button" onclick="alert('승인되면 코드 입력창이 자동으로 나타납니다.')">안내</button>
-        </div>
-
-        <div class="admin-mini">
-          * 요청하면 Firestore에 로그가 남습니다.<br/>
-          * 관리자가 adminAccess/{내ID}.allowed=true로 승인하면 코드 입력창이 표시됩니다.
-        </div>
+        <input id="clientIdView" readonly>
+        <button class="btn primary" onclick="requestAdminAccess()">권한 요청</button>
       </div>
 
-      <!-- 권한 있을 때 -->
       <div id="adminUnlockedBox" style="display:none;">
-        <div class="field" style="margin-bottom:10px;">
-          <label>관리자 코드</label>
-          <input id="adminCodeInput" type="password" placeholder="관리자 코드 입력" autocomplete="off">
-        </div>
-
-        <div class="admin-row">
-          <button class="btn primary" type="button" onclick="adminLoginFromUI()">관리자 ON</button>
-          <button class="btn ghost" type="button" onclick="adminLogoutFromUI()">로그아웃</button>
-        </div>
-
-        <div class="admin-mini">
-          * 권한 승인(allowed=true)된 사용자만 코드 입력창이 보입니다.
-        </div>
+        <input id="adminCodeInput" type="password" placeholder="관리자 코드">
+        <button class="btn primary" onclick="adminLoginFromUI()">관리자 ON</button>
+        <button class="btn ghost" onclick="adminLogoutFromUI()">OFF</button>
       </div>
     </div>
   </div>
 
-  <button class="admin-toggle-btn" type="button" onclick="toggleAdminPanel()">
+  <button class="admin-toggle-btn" onclick="toggleAdminPanel()">
     <span class="admin-dot" id="adminDot"></span>
-    <span id="adminFabText">관리자</span>
+    관리자
   </button>
 </div>
 
-<!-- ✅ JS 엔트리 -->
-<script type="module" src="./assets/js/app.js"></script>
+<!-- ================= JS ================= -->
+<script type="module" src="./app.js"></script>
+
 </body>
 </html>
