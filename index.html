@@ -3,15 +3,15 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Reservation</title>
+  <title>Grandmother’s Cafe</title>
 
-  <!-- CSS -->
-  <link rel="stylesheet" href="./style.css">
+  <!-- CSS (assets 폴더) -->
+  <link rel="stylesheet" href="./assets/style.css">
 </head>
 
 <body>
 
-<!-- ================= TOPBAR ================= -->
+<!-- ================= TOP BAR ================= -->
 <header class="topbar">
   <div class="topbar-inner">
     <div class="brand">
@@ -22,8 +22,8 @@
 
     <div class="top-actions">
       <nav class="nav">
-        <button class="tab-btn" data-view="home">메인</button>
-        <button class="tab-btn active" data-view="maid">메이드 예약</button>
+        <button class="tab-btn active" data-view="home">메인</button>
+        <button class="tab-btn" data-view="maid">메이드 예약</button>
         <button class="tab-btn" data-view="food">음식 예약</button>
         <button class="tab-btn" data-view="status">예약 현황</button>
         <button class="tab-btn" data-view="admin" id="adminTab" style="display:none;">
@@ -44,7 +44,7 @@
   <div class="side-card">
     <div class="side-title">안내</div>
     <div class="side-text">
-      메이드 예약은 “예약하기”로 접수됩니다.<br/>
+      메이드 예약은 “예약하기”로 접수됩니다.<br>
       음식 예약은 “담기 → 주문 확정”으로 접수됩니다.
     </div>
   </div>
@@ -64,17 +64,21 @@
   <div class="content">
 
     <!-- HOME -->
-    <section id="view-home" class="view">
+    <section id="view-home" class="view active">
       <h1 class="page-title">메인</h1>
-      <div class="page-sub">예약 시스템에 오신 걸 환영합니다.</div>
+      <p class="page-sub">
+        할머니의 카페 예약 시스템입니다.<br>
+        상단 메뉴를 통해 예약을 진행하세요.
+      </p>
     </section>
 
     <!-- MAID -->
-    <section id="view-maid" class="view active">
+    <section id="view-maid" class="view">
       <h1 class="page-title">메이드 예약</h1>
 
       <div class="grid">
         <section class="card">
+
           <div class="field">
             <label>메이드 이름</label>
             <select id="maidName">
@@ -87,11 +91,11 @@
 
           <div class="row">
             <div class="field">
-              <label>날짜</label>
+              <label>예약 날짜</label>
               <input type="date" id="maidDate">
             </div>
             <div class="field">
-              <label>시간</label>
+              <label>예약 시간</label>
               <select id="maidTime">
                 <option value="">선택</option>
                 <option>12:00</option>
@@ -119,15 +123,16 @@
               <input type="number" id="maidPeople" min="1">
             </div>
             <div class="field">
-              <label>디스코드</label>
+              <label>디스코드 아이디</label>
               <input id="maidDiscord">
             </div>
           </div>
 
           <div class="actions">
-            <button class="btn ghost" onclick="resetMaidForm()">초기화</button>
-            <button class="btn primary" onclick="submitMaid()">예약하기</button>
+            <button class="btn ghost" type="button" onclick="resetMaidForm()">초기화</button>
+            <button class="btn primary" type="button" onclick="submitMaid()">예약하기</button>
           </div>
+
         </section>
       </div>
     </section>
@@ -135,7 +140,7 @@
     <!-- FOOD -->
     <section id="view-food" class="view">
       <h1 class="page-title">음식 예약</h1>
-      <!-- food UI는 app.js에서 동작 -->
+      <p class="page-sub">음식 예약 기능은 여기에서 진행됩니다.</p>
     </section>
 
     <!-- STATUS -->
@@ -144,11 +149,11 @@
 
       <div class="kpi-grid">
         <div class="kpi">
-          <div class="label">메이드</div>
+          <div class="label">메이드 예약</div>
           <div class="value" id="kpiMaid">0</div>
         </div>
         <div class="kpi">
-          <div class="label">음식</div>
+          <div class="label">음식 주문</div>
           <div class="value" id="kpiFood">0</div>
         </div>
       </div>
@@ -163,7 +168,7 @@
     <!-- ADMIN -->
     <section id="view-admin" class="view">
       <h1 class="page-title">관리자 전용</h1>
-      <button class="btn ghost" onclick="clearAllStatus()">전체 삭제</button>
+      <button class="btn ghost" onclick="clearAllStatus()">전체 예약 삭제</button>
     </section>
 
   </div>
@@ -186,7 +191,7 @@
       <div id="adminUnlockedBox" style="display:none;">
         <input id="adminCodeInput" type="password" placeholder="관리자 코드">
         <button class="btn primary" onclick="adminLoginFromUI()">관리자 ON</button>
-        <button class="btn ghost" onclick="adminLogoutFromUI()">OFF</button>
+        <button class="btn ghost" onclick="adminLogoutFromUI()">로그아웃</button>
       </div>
     </div>
   </div>
@@ -198,7 +203,7 @@
 </div>
 
 <!-- ================= JS ================= -->
-<script type="module" src="./app.js"></script>
+<script type="module" src="./assets/app.js"></script>
 
 </body>
 </html>
