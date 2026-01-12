@@ -360,9 +360,7 @@ td .pill{
   gap:10px;
   align-items:center;
 }
-.status-controls input{
-  max-width:360px;
-}
+.status-controls input{max-width:360px;}
 .muted-small{color:var(--muted); font-size:12px;}
 
 /* ===== HOME (Main) ===== */
@@ -373,7 +371,6 @@ td .pill{
   gap:14px;
   min-height: 640px;
 }
-
 .hero-media{
   position:relative;
   border-radius:22px;
@@ -381,7 +378,6 @@ td .pill{
   border:1px solid var(--line);
   background:var(--surface);
   box-shadow:var(--shadow);
-
   height: 68vh;
   min-height: 640px;
   max-height: 820px;
@@ -450,11 +446,7 @@ td .pill{
   font-size:14px;
   line-height:1.65;
 }
-.hero-actions{
-  display:flex;
-  gap:10px;
-  margin-top:14px;
-}
+.hero-actions{display:flex;gap:10px;margin-top:14px;}
 
 /* ===== Floating Admin Login (bottom-right) ===== */
 .admin-fab{
@@ -468,7 +460,7 @@ td .pill{
   gap:10px;
 }
 .admin-panel{
-  width: 320px;
+  width: 360px;
   border:1px solid var(--line);
   border-radius:18px;
   background:var(--surface);
@@ -492,24 +484,14 @@ td .pill{
   border-bottom:1px solid var(--line);
   background:linear-gradient(135deg, var(--pink-weak), var(--surface));
 }
-.admin-panel-head strong{
-  font-size:13px;
-  font-weight:950;
-}
+.admin-panel-head strong{font-size:13px;font-weight:950;}
 .admin-state{
   font-size:12px;
   font-weight:950;
   color:var(--pink-strong);
 }
-.admin-panel-body{
-  padding:12px;
-}
-.admin-row{
-  display:flex;
-  gap:8px;
-  align-items:center;
-}
-.admin-row input{flex:1;}
+.admin-panel-body{padding:12px;}
+.admin-row{display:flex;gap:8px;align-items:center;}
 .admin-mini{
   margin-top:10px;
   font-size:12px;
@@ -537,16 +519,11 @@ td .pill{
 }
 .admin-dot.on{ background: var(--pink-strong); }
 
-/* responsive */
 @media (max-width: 980px){
   .food-layout{grid-template-columns:1fr;}
   .kpi-grid{grid-template-columns:1fr;}
   .home-hero{grid-template-columns:1fr; min-height:auto;}
-  .hero-media{
-    height:auto;
-    min-height:480px;
-    max-height:none;
-  }
+  .hero-media{height:auto;min-height:480px;max-height:none;}
   .hero-title{font-size:24px;}
 }
 @media (max-width: 820px){
@@ -557,6 +534,7 @@ td .pill{
   .brand{min-width:auto;}
   .top-actions{gap:8px;}
   .theme-btn{height:42px;}
+  .admin-panel{width:min(92vw, 380px);}
 }
 </style>
 </head>
@@ -577,6 +555,7 @@ td .pill{
         <button class="tab-btn active" data-view="maid">메이드 예약</button>
         <button class="tab-btn" data-view="food">음식 예약</button>
         <button class="tab-btn" data-view="status">예약 현황</button>
+        <button class="tab-btn" data-view="admin" id="adminTab" style="display:none;">관리자 전용</button>
       </nav>
 
       <button class="theme-btn" type="button" onclick="toggleTheme()">
@@ -592,7 +571,8 @@ td .pill{
     <div class="side-title">안내</div>
     <div class="side-text">
       메이드 예약은 “예약하기”로 접수됩니다.<br/>
-      음식 예약은 “담기 → 주문 확정”으로 접수됩니다.
+      음식 예약은 “담기 → 주문 확정”으로 접수됩니다.<br/>
+      (Firestore 저장 · 새로고침 유지)
     </div>
   </div>
 
@@ -601,8 +581,7 @@ td .pill{
     <ul class="side-list">
       <li>음식 최소 100개부터</li>
       <li>펫 메뉴는 100% 예약제</li>
-      <li>음식 초기화 = 장바구니 비우기</li>
-      <li>현황은 새로고침하면 초기화(저장 없음)</li>
+      <li>관리자 권한(true) 승인 후 코드 입력창 표시</li>
     </ul>
   </div>
 </aside>
@@ -610,9 +589,7 @@ td .pill{
 <main class="main">
   <div class="content">
 
-    <!-- =======================
-         VIEW 0: 메인 화면
-    ======================= -->
+    <!-- VIEW: HOME -->
     <section id="view-home" class="view">
       <h1 class="page-title">메인</h1>
       <div class="page-sub">환영합니다. 메이드/음식 예약을 빠르게 진행해보세요.</div>
@@ -620,12 +597,8 @@ td .pill{
       <div class="home-hero">
         <div class="hero-media" aria-label="단체사진 슬라이드">
           <div class="hero-badge">📸 단체사진</div>
-
-          <div class="slide active" id="slideA"
-               style="background-image:url('https://i.imgur.com/boRgmMJ.jpeg');"></div>
-
-          <div class="slide" id="slideB"
-               style="background-image:url('https://i.imgur.com/WL8Xvbb.jpeg');"></div>
+          <div class="slide active" id="slideA" style="background-image:url('https://i.imgur.com/boRgmMJ.jpeg');"></div>
+          <div class="slide" id="slideB" style="background-image:url('https://i.imgur.com/WL8Xvbb.jpeg');"></div>
         </div>
 
         <div class="hero-copy">
@@ -656,12 +629,10 @@ td .pill{
       </div>
     </section>
 
-    <!-- =======================
-         VIEW 1: 메이드 예약
-    ======================= -->
+    <!-- VIEW: MAID -->
     <section id="view-maid" class="view active">
       <h1 class="page-title">메이드 예약</h1>
-      <div class="page-sub">메이드 이름 / 날짜 / 시간 / 예약 고유번호 / 이름 / 총 인원수 / 디스코드 아이디</div>
+      <div class="page-sub">메이드 이름 / 날짜 / 시간 / 예약 고유번호 / 이름 / 총 인원수(직접 입력) / 디스코드 아이디</div>
 
       <div class="grid">
         <section class="card">
@@ -724,14 +695,12 @@ td .pill{
             <button class="btn primary" type="button" onclick="submitMaid()">예약하기</button>
           </div>
 
-          <div class="note">※ 메이드 예약 “예약하기”를 누르면 예약 현황에 기록됩니다.</div>
+          <div class="note">※ “예약하기”를 누르면 Firestore에 저장되고, 예약 현황에 실시간 반영됩니다.</div>
         </section>
       </div>
     </section>
 
-    <!-- =======================
-         VIEW 2: 음식 예약 (담기 + 장바구니)
-    ======================= -->
+    <!-- VIEW: FOOD -->
     <section id="view-food" class="view">
       <h1 class="page-title">음식 예약</h1>
       <div class="page-sub">담기 방식 · 최소 100개 · 펫 메뉴는 예약제</div>
@@ -807,18 +776,16 @@ td .pill{
             <button class="btn primary small" type="button" onclick="confirmFoodOrder()">주문 확정</button>
           </div>
 
-          <div class="note">※ “주문 확정”을 누르면 예약 현황에 기록됩니다.</div>
+          <div class="note">※ “주문 확정”을 누르면 Firestore에 저장되고, 현황에 실시간 반영됩니다.</div>
         </section>
 
       </div>
     </section>
 
-    <!-- =======================
-         VIEW 3: 예약 현황
-    ======================= -->
+    <!-- VIEW: STATUS -->
     <section id="view-status" class="view">
       <h1 class="page-title">예약 현황</h1>
-      <div class="page-sub">현재 페이지에서 접수된 예약/주문 목록 (새로고침 시 초기화)</div>
+      <div class="page-sub">Firestore 실시간 목록 (새로고침해도 유지)</div>
 
       <div class="status-controls">
         <input id="statusSearch" type="text" placeholder="검색: 예약번호 / 이름 / 디스코드" oninput="renderStatus()">
@@ -887,10 +854,29 @@ td .pill{
           </div>
         </section>
       </div>
+    </section>
 
-      <div class="actions">
-        <button class="btn ghost" type="button" onclick="clearAllStatus()" data-admin-only="true">전체 초기화</button>
-        <button class="btn primary" type="button" onclick="alert('현재는 저장 기능 없음(새로고침 시 초기화)')">저장 기능 안내</button>
+    <!-- VIEW: ADMIN -->
+    <section id="view-admin" class="view">
+      <h1 class="page-title">관리자 전용</h1>
+      <div class="page-sub">관리자 ON 상태에서만 접근 가능합니다.</div>
+
+      <div class="grid">
+        <section class="card">
+          <div class="card-title">
+            <strong>관리자 도구</strong>
+            <span class="badge">ADMIN</span>
+          </div>
+
+          <div class="note" style="margin-top:0;">
+            아래 기능은 관리자 ON에서만 사용 가능합니다.
+          </div>
+
+          <div class="actions">
+            <button class="btn ghost" type="button" onclick="clearAllStatus()" data-admin-only="true">전체 초기화(삭제)</button>
+            <button class="btn primary" type="button" onclick="alert('추가 기능 예정')">기능 추가</button>
+          </div>
+        </section>
       </div>
     </section>
 
@@ -906,18 +892,44 @@ td .pill{
     </div>
 
     <div class="admin-panel-body">
-      <div class="field" style="margin-bottom:10px;">
-        <label>관리자 코드</label>
-        <input id="adminCodeInput" type="password" placeholder="관리자 코드 입력" autocomplete="off">
+      <!-- 권한 없을 때 -->
+      <div id="adminLockedBox">
+        <div class="note" style="margin-top:0;">
+          관리자 권한이 필요합니다.<br/>
+          아래 버튼으로 권한을 요청하세요.
+        </div>
+
+        <div class="field" style="margin:10px 0 0 0;">
+          <label>내 요청 ID (관리자가 allowed=true로 승인)</label>
+          <input id="clientIdView" type="text" readonly>
+        </div>
+
+        <div class="actions" style="margin-top:10px;">
+          <button class="btn primary" type="button" onclick="requestAdminAccess()">권한 요청</button>
+          <button class="btn ghost" type="button" onclick="alert('승인되면 코드 입력창이 자동으로 나타납니다.')">안내</button>
+        </div>
+
+        <div class="admin-mini">
+          * 요청하면 Firestore에 로그가 남습니다.<br/>
+          * 관리자가 adminAccess/{내ID}.allowed=true로 승인하면 코드 입력창이 표시됩니다.
+        </div>
       </div>
 
-      <div class="admin-row">
-        <button class="btn primary" type="button" onclick="adminLoginFromUI()">로그인</button>
-        <button class="btn ghost" type="button" onclick="adminLogoutFromUI()">로그아웃</button>
-      </div>
+      <!-- 권한 있을 때 -->
+      <div id="adminUnlockedBox" style="display:none;">
+        <div class="field" style="margin-bottom:10px;">
+          <label>관리자 코드</label>
+          <input id="adminCodeInput" type="password" placeholder="관리자 코드 입력" autocomplete="off">
+        </div>
 
-      <div class="admin-mini">
-        * 관리자 모드에서만 “전체 초기화” 같은 기능이 활성화됩니다.
+        <div class="admin-row">
+          <button class="btn primary" type="button" onclick="adminLoginFromUI()">관리자 ON</button>
+          <button class="btn ghost" type="button" onclick="adminLogoutFromUI()">로그아웃</button>
+        </div>
+
+        <div class="admin-mini">
+          * 권한 승인(allowed=true)된 사용자만 코드 입력창이 보입니다.
+        </div>
       </div>
     </div>
   </div>
@@ -928,392 +940,637 @@ td .pill{
   </button>
 </div>
 
-<script>
-/* =========================
-   THEME (no localStorage)
-========================= */
-let isDark = false;
-function toggleTheme(){
-  isDark = !isDark;
-  if(isDark){
-    document.documentElement.setAttribute('data-theme', 'dark');
-    themeIcon.textContent = '☀️';
-    themeText.textContent = '라이트 모드';
-  }else{
-    document.documentElement.removeAttribute('data-theme');
-    themeIcon.textContent = '🌙';
-    themeText.textContent = '다크 모드';
-  }
-}
+<!-- =========================
+     Firebase + Firestore (Module)
+     ✅ Vercel에서 정상 동작 (전역 바인딩/DOM 순서 해결)
+========================= -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
+  import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-analytics.js";
+  import {
+    getFirestore,
+    collection,
+    addDoc,
+    doc,
+    setDoc,
+    updateDoc,
+    deleteDoc,
+    getDocs,
+    onSnapshot,
+    query,
+    where,
+    orderBy,
+    limit,
+    serverTimestamp,
+    writeBatch
+  } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
 
-/* =========================
-   VIEW SWITCH (theme unaffected)
-========================= */
-function setView(view){
-  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-  const target = document.getElementById(`view-${view}`);
-  if(target) target.classList.add('active');
+  /* =========================
+     ✅ 인라인 onclick 안전용 전역 자리(placeholder)
+  ========================= */
+  window.setView = () => {};
+  window.toggleTheme = () => {};
+  window.toggleAdminPanel = () => {};
+  window.resetMaidForm = () => {};
+  window.submitMaid = () => {};
+  window.addToCart = () => {};
+  window.removeFromCart = () => {};
+  window.clearCart = () => {};
+  window.confirmFoodOrder = () => {};
+  window.renderStatus = () => {};
+  window.requestAdminAccess = () => {};
+  window.adminLoginFromUI = () => {};
+  window.adminLogoutFromUI = () => {};
+  window.clearAllStatus = () => {};
 
-  document.querySelectorAll('.tab-btn')
-    .forEach(b => b.classList.toggle('active', b.dataset.view === view));
+  /* =========================
+     FIREBASE INIT
+  ========================= */
+  const firebaseConfig = {
+    apiKey: "AIzaSyCfMWVHgewbojxk4L-4A_oz8CtUfCUsZGE",
+    authDomain: "cafe-985f1.firebaseapp.com",
+    projectId: "cafe-985f1",
+    storageBucket: "cafe-985f1.firebasestorage.app",
+    messagingSenderId: "133444445516",
+    appId: "1:133444445516:web:1bebdebd6d26928fd15be9",
+    measurementId: "G-1K7L92P1CR"
+  };
 
-  location.hash = view;
-  window.scrollTo({ top: 0, behavior: 'smooth' });
+  const app = initializeApp(firebaseConfig);
+  try { getAnalytics(app); } catch(e) {}
+  const db = getFirestore(app);
 
-  if(view === 'status') renderStatus();
-}
-document.querySelectorAll('.tab-btn').forEach(btn=>{
-  btn.addEventListener('click', ()=> setView(btn.dataset.view));
-});
-const initial = (location.hash || '#home').replace('#','');
-setView(
-  initial === 'food' ? 'food' :
-  (initial === 'status' ? 'status' :
-  (initial === 'maid' ? 'maid' : 'home'))
-);
+  /* =========================
+     STATE (선언 먼저)
+  ========================= */
+  let isDark = false;
 
-/* =========================
-   DATA (in-memory only)
-========================= */
-const maidReservations = [];
-const foodOrders = [];
+  // ✅ 관리자 코드 1개만 사용
+  const ADMIN_CODE = "RW-ADMIN-0000";
 
-/* =========================
-   MAID FORM
-========================= */
-function resetMaidForm(){
-  maidName.value = "";
-  maidDate.value = "";
-  maidTime.value = "";
-  maidRid.value = "";
-  maidUser.value = "";
-  maidPeople.value = "";
-  maidDiscord.value = "";
-}
+  // 권한 승인 여부 (Firestore adminAccess/{clientId}.allowed)
+  let isAllowed = false;
 
-function submitMaid(){
-  const maid = maidName.value.trim();
-  const date = maidDate.value;
-  const time = maidTime.value;
-  const rid = maidRid.value.trim();
-  const name = maidUser.value.trim();
-  const discord = maidDiscord.value.trim();
-  const people = parseInt(maidPeople.value, 10);
+  // 실제 관리자 ON 여부 (코드 맞게 입력했을 때만 true)
+  let isAdmin = false;
 
-  if(!maid || !date || !time || !rid || !name || !discord){
-    alert("메이드 예약: 모든 항목을 입력해주세요.");
-    return;
-  }
-  if(!Number.isFinite(people) || people < 1){
-    alert("총 인원수는 1명 이상 숫자로 입력해주세요.");
-    maidPeople.focus();
-    return;
-  }
+  // Firestore 실시간 데이터
+  let maidReservations = [];
+  let foodOrders = [];
 
-  maidReservations.push({ ts: new Date(), rid, name, discord, maid, date, time, people });
+  // Cart
+  let cart = [];
 
-  alert("메이드 예약이 접수되었습니다! (예약 현황에서 확인 가능)");
-  resetMaidForm();
-  renderStatus();
-}
+  // DOM helper
+  const $ = (id) => document.getElementById(id);
 
-/* =========================
-   FOOD / CART
-========================= */
-const FOOD = {
-  americano:   { name:'아메리카노', price:100, type:'일반' },
-  strawberry:  { name:'딸바 스무디', price:200, type:'일반' },
-  toast:       { name:'전남친 토스트', price:100, type:'일반' },
-  pet_water:   { name:'펫 워터', price:100, type:'펫(예약제)' },
-  pet_mineral: { name:'펫 미네랄 워터', price:200, type:'펫(예약제)' },
-  cat_churu:   { name:'캣츄르', price:100, type:'펫(예약제)' },
-};
+  // clientId(유저 식별)
+  const clientId = (() => {
+    const key = "rw_client_id";
+    let v = localStorage.getItem(key);
+    if(!v){
+      v = "c_" + Math.random().toString(36).slice(2,10) + "_" + Date.now().toString(36);
+      localStorage.setItem(key, v);
+    }
+    return v;
+  })();
 
-let cart = [];
-
-function addToCart(){
-  const key = foodMenu.value;
-  const qty = parseInt(foodQty.value, 10);
-
-  if(!Number.isFinite(qty) || qty < 100){
-    alert("음식 예약은 최소 100개부터 담을 수 있습니다.");
-    foodQty.value = 100;
-    return;
-  }
-  const item = FOOD[key];
-  if(!item){
-    alert("메뉴를 선택해주세요.");
-    return;
+  /* =========================
+     HELPERS
+  ========================= */
+  function fmtTime(d){
+    const yy = d.getFullYear();
+    const mm = String(d.getMonth()+1).padStart(2,'0');
+    const dd = String(d.getDate()).padStart(2,'0');
+    const hh = String(d.getHours()).padStart(2,'0');
+    const mi = String(d.getMinutes()).padStart(2,'0');
+    return `${yy}-${mm}-${dd} ${hh}:${mi}`;
   }
 
-  const found = cart.find(i => i.key === key);
-  if(found) found.qty += qty;
-  else cart.push({ key, name:item.name, price:item.price, type:item.type, qty });
-
-  renderCart();
-}
-
-function removeFromCart(key){
-  cart = cart.filter(i => i.key !== key);
-  renderCart();
-}
-
-function manwonToEok(totalManwon){
-  const eok = totalManwon / 10000;
-  return Number.isInteger(eok) ? String(eok) : eok.toFixed(1);
-}
-
-function renderCart(){
-  cartList.innerHTML = "";
-  let totalManwon = 0;
-
-  if(cart.length === 0){
-    const empty = document.createElement('li');
-    empty.style.borderBottom = "none";
-    empty.innerHTML = `<div class="cart-meta"><div>장바구니가 비어있어요.</div><div class="muted">왼쪽에서 메뉴를 담아주세요.</div></div>`;
-    cartList.appendChild(empty);
-    cartTotal.textContent = "0";
-    return;
+  function manwonToEok(totalManwon){
+    const eok = totalManwon / 10000;
+    return Number.isInteger(eok) ? String(eok) : eok.toFixed(1);
   }
 
-  cart.forEach(i=>{
-    const sum = i.qty * i.price;
-    totalManwon += sum;
+  const FOOD = {
+    americano:   { name:'아메리카노', price:100, type:'일반' },
+    strawberry:  { name:'딸바 스무디', price:200, type:'일반' },
+    toast:       { name:'전남친 토스트', price:100, type:'일반' },
+    pet_water:   { name:'펫 워터', price:100, type:'펫(예약제)' },
+    pet_mineral: { name:'펫 미네랄 워터', price:200, type:'펫(예약제)' },
+    cat_churu:   { name:'캣츄르', price:100, type:'펫(예약제)' },
+  };
 
-    const li = document.createElement('li');
-
-    const left = document.createElement('div');
-    left.className = "cart-meta";
-    left.innerHTML = `<div><strong>${i.name}</strong> × ${i.qty}</div><div class="muted">${i.type} · ${i.price}만원/개</div>`;
-
-    const right = document.createElement('div');
-    right.style.textAlign = "right";
-    right.innerHTML = `
-      <div><strong>${manwonToEok(sum)}</strong>억</div>
-      <button class="btn small ghost" type="button" style="margin-top:6px;" onclick="removeFromCart('${i.key}')">삭제</button>
-    `;
-
-    li.appendChild(left);
-    li.appendChild(right);
-    cartList.appendChild(li);
-  });
-
-  cartTotal.textContent = manwonToEok(totalManwon);
-}
-
-function clearCart(){
-  cart = [];
-  renderCart();
-  foodMenu.selectedIndex = 0;
-  foodQty.value = 100;
-}
-
-function confirmFoodOrder(){
-  if(cart.length === 0){
-    alert("장바구니가 비어있어요.");
-    return;
-  }
-
-  const rid = foodRid.value.trim();
-  const name = foodUser.value.trim();
-  const discord = foodDiscord.value.trim();
-
-  if(!rid || !name || !discord){
-    alert("음식 예약: 예약 고유번호 / 이름 / 디스코드 아이디를 입력해주세요.");
-    return;
-  }
-
-  let totalManwon = 0;
-  cart.forEach(i => totalManwon += i.qty * i.price);
-
-  foodOrders.push({
-    ts: new Date(),
-    rid, name, discord,
-    items: cart.map(i => ({...i})),
-    totalManwon
-  });
-
-  alert("음식 주문이 확정되었습니다! (예약 현황에서 확인 가능)");
-  clearCart();
-  renderStatus();
-}
-
-renderCart();
-
-/* =========================
-   STATUS VIEW
-========================= */
-function fmtTime(d){
-  const yy = d.getFullYear();
-  const mm = String(d.getMonth()+1).padStart(2,'0');
-  const dd = String(d.getDate()).padStart(2,'0');
-  const hh = String(d.getHours()).padStart(2,'0');
-  const mi = String(d.getMinutes()).padStart(2,'0');
-  return `${yy}-${mm}-${dd} ${hh}:${mi}`;
-}
-
-function renderStatus(){
-  const q = (statusSearch?.value || "").trim().toLowerCase();
-
-  kpiMaid.textContent = String(maidReservations.length);
-  kpiFood.textContent = String(foodOrders.length);
-
-  const foodTotalManwon = foodOrders.reduce((acc, o) => acc + o.totalManwon, 0);
-  kpiFoodTotal.textContent = manwonToEok(foodTotalManwon);
-
-  const maidFiltered = maidReservations.filter(r => {
-    if(!q) return true;
-    return (
-      r.rid.toLowerCase().includes(q) ||
-      r.name.toLowerCase().includes(q) ||
-      r.discord.toLowerCase().includes(q) ||
-      r.maid.toLowerCase().includes(q)
-    );
-  });
-
-  maidStatusBody.innerHTML = maidFiltered.length
-    ? maidFiltered.slice().reverse().map(r => `
-      <tr>
-        <td>${fmtTime(r.ts)}</td>
-        <td><span class="pill">${r.rid}</span></td>
-        <td>${r.name}</td>
-        <td>${r.discord}</td>
-        <td>${r.maid}</td>
-        <td>${r.date}</td>
-        <td>${r.time}</td>
-        <td>${r.people}</td>
-      </tr>
-    `).join("")
-    : `<tr><td colspan="8" class="muted-small">표시할 메이드 예약이 없습니다.</td></tr>`;
-
-  const foodFiltered = foodOrders.filter(o => {
-    if(!q) return true;
-    return (
-      o.rid.toLowerCase().includes(q) ||
-      o.name.toLowerCase().includes(q) ||
-      o.discord.toLowerCase().includes(q) ||
-      o.items.some(i => i.name.toLowerCase().includes(q))
-    );
-  });
-
-  foodStatusBody.innerHTML = foodFiltered.length
-    ? foodFiltered.slice().reverse().map(o => {
-      const detail = o.items.map(i => `${i.name}×${i.qty}`).join(", ");
-      return `
-      <tr>
-        <td>${fmtTime(o.ts)}</td>
-        <td><span class="pill">${o.rid}</span></td>
-        <td>${o.name}</td>
-        <td>${o.discord}</td>
-        <td>${manwonToEok(o.totalManwon)}억</td>
-        <td>${detail}</td>
-      </tr>`;
-    }).join("")
-    : `<tr><td colspan="6" class="muted-small">표시할 음식 주문이 없습니다.</td></tr>`;
-}
-
-function clearAllStatus(){
-  if(!isAdmin){
-    alert("관리자 로그인 후 사용 가능합니다. (오른쪽 하단 관리자)");
-    return;
-  }
-  if(!confirm("정말 전체 예약 현황을 초기화할까요? (페이지 내 데이터만)")) return;
-  maidReservations.length = 0;
-  foodOrders.length = 0;
-  renderStatus();
-}
-
-renderStatus();
-
-/* =========================
-   HOME SLIDESHOW (2 images)
-========================= */
-let slideOnA = true;
-const SLIDE_MS = 9000;
-
-function startHomeSlideshow(){
-  const a = document.getElementById('slideA');
-  const b = document.getElementById('slideB');
-  if(!a || !b) return;
-
-  setInterval(() => {
-    slideOnA = !slideOnA;
-    a.classList.toggle('active', slideOnA);
-    b.classList.toggle('active', !slideOnA);
-  }, SLIDE_MS);
-}
-startHomeSlideshow();
-
-/* =========================
-   ADMIN MODE (UI login)
-========================= */
-const ADMIN_CODE = "RW-ADMIN-0000"; // ✅ 원하는 코드로 바꾸기
-let isAdmin = false;
-
-function toggleAdminPanel(){
-  const panel = document.getElementById("adminPanel");
-  if(!panel) return;
-  panel.classList.toggle("open");
-
-  if(panel.classList.contains("open")){
-    setTimeout(()=> document.getElementById("adminCodeInput")?.focus(), 50);
-  }
-}
-
-function adminLoginFromUI(){
-  const inp = document.getElementById("adminCodeInput");
-  const code = (inp?.value || "").trim();
-
-  if(code === ADMIN_CODE){
-    isAdmin = true;
-    if(inp) inp.value = "";
-    updateAdminUI();
-    alert("관리자 모드가 활성화되었습니다.");
-  }else{
-    alert("관리자 코드가 올바르지 않습니다.");
-  }
-}
-
-function adminLogoutFromUI(){
-  if(!isAdmin){
-    alert("이미 관리자 모드가 꺼져있습니다.");
-    return;
-  }
-  isAdmin = false;
-  updateAdminUI();
-  alert("관리자 모드가 해제되었습니다.");
-}
-
-function updateAdminUI(){
-  const stateText = document.getElementById("adminStateText");
-  const dot = document.getElementById("adminDot");
-  const fabText = document.getElementById("adminFabText");
-
-  if(stateText) stateText.textContent = isAdmin ? "UNLOCK" : "LOCK";
-  if(dot) dot.classList.toggle("on", isAdmin);
-  if(fabText) fabText.textContent = isAdmin ? "관리자 ON" : "관리자";
-
-  const adminOnly = document.querySelectorAll("[data-admin-only='true']");
-  adminOnly.forEach(el => {
-    el.disabled = !isAdmin;
-    el.style.opacity = isAdmin ? "1" : ".55";
-    el.style.cursor = isAdmin ? "pointer" : "not-allowed";
-  });
-}
-
-document.addEventListener("keydown", (e) => {
-  const panel = document.getElementById("adminPanel");
-  if(!panel?.classList.contains("open")) return;
-
-  if(e.key === "Enter"){
-    const active = document.activeElement;
-    if(active && active.id === "adminCodeInput"){
-      adminLoginFromUI();
+  /* =========================
+     THEME
+  ========================= */
+  function toggleTheme(){
+    isDark = !isDark;
+    if(isDark){
+      document.documentElement.setAttribute("data-theme", "dark");
+      $("themeIcon").textContent = "☀️";
+      $("themeText").textContent = "라이트 모드";
+    }else{
+      document.documentElement.removeAttribute("data-theme");
+      $("themeIcon").textContent = "🌙";
+      $("themeText").textContent = "다크 모드";
     }
   }
-});
 
-updateAdminUI();
+  /* =========================
+     VIEW SWITCH
+  ========================= */
+  function setView(view){
+    if(view === "admin" && !isAdmin){
+      alert("관리자 ON 상태에서만 접근 가능합니다.");
+      return;
+    }
+
+    document.querySelectorAll(".view").forEach(v => v.classList.remove("active"));
+    const target = document.getElementById(`view-${view}`);
+    if(target) target.classList.add("active");
+
+    document.querySelectorAll(".tab-btn")
+      .forEach(b => b.classList.toggle("active", b.dataset.view === view));
+
+    location.hash = view;
+    window.scrollTo({ top: 0, behavior: "smooth" });
+
+    if(view === "status") renderStatus();
+  }
+
+  /* =========================
+     HOME SLIDESHOW
+  ========================= */
+  function startHomeSlideshow(){
+    const a = $("slideA");
+    const b = $("slideB");
+    if(!a || !b) return;
+
+    let slideOnA = true;
+    const SLIDE_MS = 9000;
+
+    setInterval(() => {
+      slideOnA = !slideOnA;
+      a.classList.toggle("active", slideOnA);
+      b.classList.toggle("active", !slideOnA);
+    }, SLIDE_MS);
+  }
+
+  /* =========================
+     ADMIN: permission gate + logs
+     - adminAccess/{clientId} : { allowed: true/false }
+     - adminLogs (collection): request_access, code_attempt, logout
+  ========================= */
+  function setClientIdView(){
+    const el = $("clientIdView");
+    if(el) el.value = clientId;
+  }
+
+  function toggleAdminPanel(){
+    const panel = $("adminPanel");
+    if(!panel) return;
+    panel.classList.toggle("open");
+    if(panel.classList.contains("open")){
+      setClientIdView();
+      if(isAllowed){
+        setTimeout(()=> $("adminCodeInput")?.focus(), 50);
+      }
+    }
+  }
+
+  async function writeAdminLog(type, extra={}){
+    await addDoc(collection(db, "adminLogs"), {
+      type,
+      clientId,
+      path: location.pathname,
+      href: location.href,
+      ua: navigator.userAgent,
+      createdAt: serverTimestamp(),
+      ...extra
+    });
+  }
+
+  async function requestAdminAccess(){
+    await writeAdminLog("request_access");
+
+    await setDoc(doc(db, "adminAccess", clientId), {
+      clientId,
+      allowed: false,
+      requestedAt: serverTimestamp(),
+      updatedAt: serverTimestamp()
+    }, { merge: true });
+
+    alert("권한 요청이 접수되었습니다. 관리자 승인(allowed=true) 후 코드 입력창이 표시됩니다.");
+  }
+
+  async function adminLoginFromUI(){
+    if(!isAllowed){
+      alert("관리자 권한이 없습니다. 먼저 권한 요청 후 승인을 받아야 합니다.");
+      return;
+    }
+
+    const inp = $("adminCodeInput");
+    const code = (inp?.value || "").trim();
+    if(inp) inp.value = "";
+
+    await writeAdminLog("code_attempt", { ok: code === ADMIN_CODE });
+
+    if(code !== ADMIN_CODE){
+      alert("관리자 코드가 올바르지 않습니다.");
+      return;
+    }
+
+    isAdmin = true;
+    updateAdminUI();
+    alert("관리자 모드가 활성화되었습니다.");
+  }
+
+  async function adminLogoutFromUI(){
+    const was = isAdmin;
+    isAdmin = false;
+    updateAdminUI();
+    if(was) await writeAdminLog("logout");
+    alert("관리자 모드가 해제되었습니다.");
+  }
+
+  function updateAdminUI(){
+    const stateText = $("adminStateText");
+    const dot = $("adminDot");
+    const fabText = $("adminFabText");
+
+    const adminTab = $("adminTab");
+    const lockedBox = $("adminLockedBox");
+    const unlockedBox = $("adminUnlockedBox");
+
+    if(isAdmin){
+      if(stateText) stateText.textContent = "ADMIN ON";
+      if(dot) dot.classList.add("on");
+      if(fabText) fabText.textContent = "관리자 ON";
+    } else if(isAllowed){
+      if(stateText) stateText.textContent = "CODE READY";
+      if(dot) dot.classList.remove("on");
+      if(fabText) fabText.textContent = "관리자(권한됨)";
+    } else {
+      if(stateText) stateText.textContent = "LOCK";
+      if(dot) dot.classList.remove("on");
+      if(fabText) fabText.textContent = "관리자";
+    }
+
+    // 권한 없으면 요청 UI, 권한 있으면 코드 UI
+    if(lockedBox) lockedBox.style.display = isAllowed ? "none" : "";
+    if(unlockedBox) unlockedBox.style.display = isAllowed ? "" : "none";
+
+    // 관리자 전용 탭/버튼
+    if(adminTab){
+      adminTab.style.display = isAdmin ? "" : "none";
+      const activeView = document.querySelector(".view.active")?.id;
+      if(!isAdmin && activeView === "view-admin") setView("home");
+    }
+
+    document.querySelectorAll("[data-admin-only='true']").forEach(el => {
+      el.disabled = !isAdmin;
+      el.style.opacity = isAdmin ? "1" : ".55";
+      el.style.cursor = isAdmin ? "pointer" : "not-allowed";
+    });
+  }
+
+  /* =========================
+     MAID
+  ========================= */
+  function resetMaidForm(){
+    $("maidName").value = "";
+    $("maidDate").value = "";
+    $("maidTime").value = "";
+    $("maidRid").value = "";
+    $("maidUser").value = "";
+    $("maidPeople").value = "";
+    $("maidDiscord").value = "";
+  }
+
+  async function submitMaid(){
+    const maid = $("maidName").value.trim();
+    const date = $("maidDate").value;
+    const time = $("maidTime").value;
+    const rid = $("maidRid").value.trim();
+    const name = $("maidUser").value.trim();
+    const discord = $("maidDiscord").value.trim();
+    const people = parseInt($("maidPeople").value, 10);
+
+    if(!maid || !date || !time || !rid || !name || !discord){
+      alert("메이드 예약: 모든 항목을 입력해주세요.");
+      return;
+    }
+    if(!Number.isFinite(people) || people < 1){
+      alert("총 인원수는 1명 이상 숫자로 입력해주세요.");
+      $("maidPeople").focus();
+      return;
+    }
+
+    await addDoc(collection(db, "maidReservations"), {
+      ts: serverTimestamp(),
+      rid, name, discord, maid, date, time, people
+    });
+
+    alert("메이드 예약이 접수되었습니다!");
+    resetMaidForm();
+    setView("status");
+  }
+
+  /* =========================
+     FOOD / CART
+  ========================= */
+  function addToCart(){
+    const key = $("foodMenu").value;
+    const qty = parseInt($("foodQty").value, 10);
+
+    if(!Number.isFinite(qty) || qty < 100){
+      alert("음식 예약은 최소 100개부터 담을 수 있습니다.");
+      $("foodQty").value = 100;
+      return;
+    }
+    const item = FOOD[key];
+    if(!item){
+      alert("메뉴를 선택해주세요.");
+      return;
+    }
+
+    const found = cart.find(i => i.key === key);
+    if(found) found.qty += qty;
+    else cart.push({ key, name:item.name, price:item.price, type:item.type, qty });
+
+    renderCart();
+  }
+
+  function removeFromCart(key){
+    cart = cart.filter(i => i.key !== key);
+    renderCart();
+  }
+
+  function clearCart(){
+    cart = [];
+    renderCart();
+    $("foodMenu").selectedIndex = 0;
+    $("foodQty").value = 100;
+  }
+
+  function renderCart(){
+    const list = $("cartList");
+    const totalEl = $("cartTotal");
+    if(!list || !totalEl) return;
+
+    list.innerHTML = "";
+    let totalManwon = 0;
+
+    if(cart.length === 0){
+      const empty = document.createElement("li");
+      empty.style.borderBottom = "none";
+      empty.innerHTML = `<div class="cart-meta"><div>장바구니가 비어있어요.</div><div class="muted">왼쪽에서 메뉴를 담아주세요.</div></div>`;
+      list.appendChild(empty);
+      totalEl.textContent = "0";
+      return;
+    }
+
+    cart.forEach(i=>{
+      const sum = i.qty * i.price;
+      totalManwon += sum;
+
+      const li = document.createElement("li");
+
+      const left = document.createElement("div");
+      left.className = "cart-meta";
+      left.innerHTML = `<div><strong>${i.name}</strong> × ${i.qty}</div><div class="muted">${i.type} · ${i.price}만원/개</div>`;
+
+      const right = document.createElement("div");
+      right.style.textAlign = "right";
+      right.innerHTML = `
+        <div><strong>${manwonToEok(sum)}</strong>억</div>
+        <button class="btn small ghost" type="button" style="margin-top:6px;" onclick="removeFromCart('${i.key}')">삭제</button>
+      `;
+
+      li.appendChild(left);
+      li.appendChild(right);
+      list.appendChild(li);
+    });
+
+    totalEl.textContent = manwonToEok(totalManwon);
+  }
+
+  async function confirmFoodOrder(){
+    if(cart.length === 0){
+      alert("장바구니가 비어있어요.");
+      return;
+    }
+
+    const rid = $("foodRid").value.trim();
+    const name = $("foodUser").value.trim();
+    const discord = $("foodDiscord").value.trim();
+
+    if(!rid || !name || !discord){
+      alert("음식 예약: 예약 고유번호 / 이름 / 디스코드 아이디를 입력해주세요.");
+      return;
+    }
+
+    let totalManwon = 0;
+    cart.forEach(i => totalManwon += i.qty * i.price);
+
+    await addDoc(collection(db, "foodOrders"), {
+      ts: serverTimestamp(),
+      rid, name, discord,
+      items: cart.map(i => ({...i})),
+      totalManwon
+    });
+
+    alert("음식 주문이 확정되었습니다!");
+    clearCart();
+    setView("status");
+  }
+
+  /* =========================
+     STATUS RENDER
+  ========================= */
+  function renderStatus(){
+    const qv = ($("statusSearch")?.value || "").trim().toLowerCase();
+
+    $("kpiMaid").textContent = String(maidReservations.length);
+    $("kpiFood").textContent = String(foodOrders.length);
+
+    const foodTotalManwon = foodOrders.reduce((acc, o) => acc + (o.totalManwon || 0), 0);
+    $("kpiFoodTotal").textContent = manwonToEok(foodTotalManwon);
+
+    const maidFiltered = maidReservations.filter(r => {
+      if(!qv) return true;
+      return (
+        String(r.rid || "").toLowerCase().includes(qv) ||
+        String(r.name || "").toLowerCase().includes(qv) ||
+        String(r.discord || "").toLowerCase().includes(qv) ||
+        String(r.maid || "").toLowerCase().includes(qv)
+      );
+    });
+
+    $("maidStatusBody").innerHTML = maidFiltered.length
+      ? maidFiltered.map(r => `
+        <tr>
+          <td>${fmtTime(r.ts || new Date())}</td>
+          <td><span class="pill">${r.rid || ""}</span></td>
+          <td>${r.name || ""}</td>
+          <td>${r.discord || ""}</td>
+          <td>${r.maid || ""}</td>
+          <td>${r.date || ""}</td>
+          <td>${r.time || ""}</td>
+          <td>${r.people ?? ""}</td>
+        </tr>
+      `).join("")
+      : `<tr><td colspan="8" class="muted-small">표시할 메이드 예약이 없습니다.</td></tr>`;
+
+    const foodFiltered = foodOrders.filter(o => {
+      if(!qv) return true;
+      return (
+        String(o.rid || "").toLowerCase().includes(qv) ||
+        String(o.name || "").toLowerCase().includes(qv) ||
+        String(o.discord || "").toLowerCase().includes(qv) ||
+        (o.items || []).some(i => String(i.name || "").toLowerCase().includes(qv))
+      );
+    });
+
+    $("foodStatusBody").innerHTML = foodFiltered.length
+      ? foodFiltered.map(o => {
+        const detail = (o.items || []).map(i => `${i.name}×${i.qty}`).join(", ");
+        return `
+          <tr>
+            <td>${fmtTime(o.ts || new Date())}</td>
+            <td><span class="pill">${o.rid || ""}</span></td>
+            <td>${o.name || ""}</td>
+            <td>${o.discord || ""}</td>
+            <td>${manwonToEok(o.totalManwon || 0)}억</td>
+            <td>${detail}</td>
+          </tr>`;
+      }).join("")
+      : `<tr><td colspan="6" class="muted-small">표시할 음식 주문이 없습니다.</td></tr>`;
+  }
+
+  /* =========================
+     FIRESTORE WATCHERS
+  ========================= */
+  function startFirestoreWatchers(){
+    // 예약 데이터
+    const maidQ = query(collection(db, "maidReservations"), orderBy("ts", "desc"), limit(500));
+    onSnapshot(maidQ, (snap) => {
+      maidReservations = snap.docs.map(d => {
+        const v = d.data();
+        return { id: d.id, ...v, ts: v.ts?.toDate ? v.ts.toDate() : new Date() };
+      });
+      renderStatus();
+    });
+
+    const foodQ = query(collection(db, "foodOrders"), orderBy("ts", "desc"), limit(500));
+    onSnapshot(foodQ, (snap) => {
+      foodOrders = snap.docs.map(d => {
+        const v = d.data();
+        return { id: d.id, ...v, ts: v.ts?.toDate ? v.ts.toDate() : new Date() };
+      });
+      renderStatus();
+    });
+
+    // 권한 문서 감시: adminAccess/{clientId}.allowed
+    onSnapshot(doc(db, "adminAccess", clientId), (snap) => {
+      if(!snap.exists()){
+        isAllowed = false;
+        if(isAdmin){ isAdmin = false; }
+        updateAdminUI();
+        return;
+      }
+      const v = snap.data();
+      isAllowed = !!v.allowed;
+
+      // 권한 회수되면 관리자 강제 OFF
+      if(!isAllowed && isAdmin){
+        isAdmin = false;
+      }
+
+      updateAdminUI();
+    });
+  }
+
+  /* =========================
+     전체 초기화(삭제) - 관리자만
+  ========================= */
+  async function clearAllStatus(){
+    if(!isAdmin){
+      alert("관리자 ON 후 사용 가능합니다.");
+      return;
+    }
+    if(!confirm("정말 전체 예약을 Firestore에서 삭제할까요?")) return;
+
+    const batch = writeBatch(db);
+
+    const maidSnap = await getDocs(query(collection(db, "maidReservations"), limit(500)));
+    maidSnap.forEach(d => batch.delete(d.ref));
+
+    const foodSnap = await getDocs(query(collection(db, "foodOrders"), limit(500)));
+    foodSnap.forEach(d => batch.delete(d.ref));
+
+    await batch.commit();
+    alert("삭제 완료 (최대 500개 범위).");
+  }
+
+  /* =========================
+     INIT
+  ========================= */
+  document.addEventListener("DOMContentLoaded", () => {
+    // 탭 클릭
+    document.querySelectorAll(".tab-btn").forEach(btn => {
+      btn.addEventListener("click", () => setView(btn.dataset.view));
+    });
+
+    // Enter로 코드 입력 후 로그인
+    document.addEventListener("keydown", (e) => {
+      const panel = $("adminPanel");
+      if(!panel?.classList.contains("open")) return;
+      if(e.key === "Enter" && document.activeElement?.id === "adminCodeInput"){
+        adminLoginFromUI();
+      }
+    });
+
+    // 초기 라우팅
+    const initial = (location.hash || "#home").replace("#","");
+    setView(
+      initial === "food" ? "food" :
+      (initial === "status" ? "status" :
+      (initial === "maid" ? "maid" :
+      (initial === "admin" ? "admin" : "home")))
+    );
+
+    // UI 초기
+    renderCart();
+    renderStatus();
+    updateAdminUI();
+    startHomeSlideshow();
+    startFirestoreWatchers();
+    setClientIdView();
+  });
+
+  /* =========================
+     ✅ 전역(window) 바인딩 (인라인 onclick용)
+  ========================= */
+  window.setView = setView;
+  window.toggleTheme = toggleTheme;
+
+  window.toggleAdminPanel = toggleAdminPanel;
+  window.requestAdminAccess = requestAdminAccess;
+  window.adminLoginFromUI = adminLoginFromUI;
+  window.adminLogoutFromUI = adminLogoutFromUI;
+
+  window.resetMaidForm = resetMaidForm;
+  window.submitMaid = submitMaid;
+
+  window.addToCart = addToCart;
+  window.removeFromCart = removeFromCart;
+  window.clearCart = clearCart;
+  window.confirmFoodOrder = confirmFoodOrder;
+
+  window.renderStatus = renderStatus;
+  window.clearAllStatus = clearAllStatus;
 </script>
 
 </body>
