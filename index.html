@@ -519,32 +519,6 @@ td .pill{
 }
 .admin-dot.on{ background: var(--pink-strong); }
 
-.req-list{
-  margin-top:12px;
-  padding-top:12px;
-  border-top:1px dashed var(--line);
-  display:grid;
-  gap:10px;
-}
-.req-item{
-  border:1px solid var(--line);
-  border-radius:14px;
-  padding:10px;
-  display:flex;
-  gap:10px;
-  align-items:center;
-  justify-content:space-between;
-}
-.req-meta{
-  display:flex;
-  flex-direction:column;
-  gap:4px;
-  font-size:12px;
-  color:var(--muted);
-}
-.req-meta strong{color:var(--text); font-size:13px;}
-.req-meta .small{font-size:11px; color:var(--muted);}
-
 @media (max-width: 980px){
   .food-layout{grid-template-columns:1fr;}
   .kpi-grid{grid-template-columns:1fr;}
@@ -607,7 +581,7 @@ td .pill{
     <ul class="side-list">
       <li>음식 최소 100개부터</li>
       <li>펫 메뉴는 100% 예약제</li>
-      <li>관리자 요청 → 총관리자 승인 후 ON</li>
+      <li>관리자 권한(true) 승인 후 코드 입력창 표시</li>
     </ul>
   </div>
 </aside>
@@ -918,23 +892,45 @@ td .pill{
     </div>
 
     <div class="admin-panel-body">
-      <div class="field" style="margin-bottom:10px;">
-        <label>관리자 코드</label>
-        <input id="adminCodeInput" type="password" placeholder="관리자 코드 입력" autocomplete="off">
+      <!-- 권한 없을 때 -->
+      <div id="adminLockedBox">
+        <div class="note" style="margin-top:0;">
+          관리자 권한이 필요합니다.<br/>
+          아래 버튼으로 권한을 요청하세요.
+        </div>
+
+        <div class="field" style="margin:10px 0 0 0;">
+          <label>내 요청 ID (관리자가 allowed=true로 승인)</label>
+          <input id="clientIdView" type="text" readonly>
+        </div>
+
+        <div class="actions" style="margin-top:10px;">
+          <button class="btn primary" type="button" onclick="requestAdminAccess()">권한 요청</button>
+          <button class="btn ghost" type="button" onclick="alert('승인되면 코드 입력창이 자동으로 나타납니다.')">안내</button>
+        </div>
+
+        <div class="admin-mini">
+          * 요청하면 Firestore에 로그가 남습니다.<br/>
+          * 관리자가 adminAccess/{내ID}.allowed=true로 승인하면 코드 입력창이 표시됩니다.
+        </div>
       </div>
 
-      <div class="admin-row">
-        <button class="btn primary" type="button" onclick="adminLoginFromUI()">로그인</button>
-        <button class="btn ghost" type="button" onclick="adminLogoutFromUI()">로그아웃</button>
-      </div>
+      <!-- 권한 있을 때 -->
+      <div id="adminUnlockedBox" style="display:none;">
+        <div class="field" style="margin-bottom:10px;">
+          <label>관리자 코드</label>
+          <input id="adminCodeInput" type="password" placeholder="관리자 코드 입력" autocomplete="off">
+        </div>
 
-      <div class="admin-mini">
-        * 관리자 요청 코드를 입력하면 “승인 대기”가 됩니다.<br/>
-        * 총 관리자(마스터)가 승인하면 자동으로 관리자 ON 됩니다.
-      </div>
+        <div class="admin-row">
+          <button class="btn primary" type="button" onclick="adminLoginFromUI()">관리자 ON</button>
+          <button class="btn ghost" type="button" onclick="adminLogoutFromUI()">로그아웃</button>
+        </div>
 
-      <!-- 총 관리자 전용 승인 목록 -->
-      <div class="req-list" id="pendingList" style="display:none;"></div>
+        <div class="admin-mini">
+          * 권한 승인(allowed=true)된 사용자만 코드 입력창이 보입니다.
+        </div>
+      </div>
     </div>
   </div>
 
@@ -946,7 +942,7 @@ td .pill{
 
 <!-- =========================
      Firebase + Firestore (Module)
-     ✅ Vercel에서 정상 동작 (전역 바인딩/DOM 순서 해결 완료)
+     ✅ Vercel에서 정상 동작 (전역 바인딩/DOM 순서 해결)
 ========================= -->
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
@@ -970,7 +966,7 @@ td .pill{
   } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
 
   /* =========================
-     ✅ 전역 자리(인라인 onclick 안전)
+     ✅ 인라인 onclick 안전용 전역 자리(placeholder)
   ========================= */
   window.setView = () => {};
   window.toggleTheme = () => {};
@@ -982,6 +978,7 @@ td .pill{
   window.clearCart = () => {};
   window.confirmFoodOrder = () => {};
   window.renderStatus = () => {};
+  window.requestAdminAccess = () => {};
   window.adminLoginFromUI = () => {};
   window.adminLogoutFromUI = () => {};
   window.clearAllStatus = () => {};
@@ -1004,29 +1001,30 @@ td .pill{
   const db = getFirestore(app);
 
   /* =========================
-     ADMIN CODES
-  ========================= */
-  const ADMIN_REQUEST_CODE = "RW-ADMIN-0000";
-  const MASTER_ADMIN_CODE  = "RW-MASTER-9999";
-
-  /* =========================
-     STATE (선언 먼저!)
+     STATE (선언 먼저)
   ========================= */
   let isDark = false;
-  let isAdmin = false;
-  let isMaster = false;
-  let adminPending = false;
 
-  // Firestore 실시간 데이터 (선언 먼저!)
+  // ✅ 관리자 코드 1개만 사용
+  const ADMIN_CODE = "RW-ADMIN-0000";
+
+  // 권한 승인 여부 (Firestore adminAccess/{clientId}.allowed)
+  let isAllowed = false;
+
+  // 실제 관리자 ON 여부 (코드 맞게 입력했을 때만 true)
+  let isAdmin = false;
+
+  // Firestore 실시간 데이터
   let maidReservations = [];
   let foodOrders = [];
 
   // Cart
   let cart = [];
 
-  // DOM cache
+  // DOM helper
   const $ = (id) => document.getElementById(id);
 
+  // clientId(유저 식별)
   const clientId = (() => {
     const key = "rw_client_id";
     let v = localStorage.getItem(key);
@@ -1068,21 +1066,19 @@ td .pill{
   ========================= */
   function toggleTheme(){
     isDark = !isDark;
-    const icon = $("themeIcon");
-    const text = $("themeText");
     if(isDark){
       document.documentElement.setAttribute("data-theme", "dark");
-      if(icon) icon.textContent = "☀️";
-      if(text) text.textContent = "라이트 모드";
+      $("themeIcon").textContent = "☀️";
+      $("themeText").textContent = "라이트 모드";
     }else{
       document.documentElement.removeAttribute("data-theme");
-      if(icon) icon.textContent = "🌙";
-      if(text) text.textContent = "다크 모드";
+      $("themeIcon").textContent = "🌙";
+      $("themeText").textContent = "다크 모드";
     }
   }
 
   /* =========================
-     VIEW SWITCH (admin guarded)
+     VIEW SWITCH
   ========================= */
   function setView(view){
     if(view === "admin" && !isAdmin){
@@ -1104,100 +1100,139 @@ td .pill{
   }
 
   /* =========================
-     ADMIN UI
+     HOME SLIDESHOW
   ========================= */
+  function startHomeSlideshow(){
+    const a = $("slideA");
+    const b = $("slideB");
+    if(!a || !b) return;
+
+    let slideOnA = true;
+    const SLIDE_MS = 9000;
+
+    setInterval(() => {
+      slideOnA = !slideOnA;
+      a.classList.toggle("active", slideOnA);
+      b.classList.toggle("active", !slideOnA);
+    }, SLIDE_MS);
+  }
+
+  /* =========================
+     ADMIN: permission gate + logs
+     - adminAccess/{clientId} : { allowed: true/false }
+     - adminLogs (collection): request_access, code_attempt, logout
+  ========================= */
+  function setClientIdView(){
+    const el = $("clientIdView");
+    if(el) el.value = clientId;
+  }
+
   function toggleAdminPanel(){
     const panel = $("adminPanel");
     if(!panel) return;
     panel.classList.toggle("open");
     if(panel.classList.contains("open")){
-      setTimeout(()=> $("adminCodeInput")?.focus(), 50);
+      setClientIdView();
+      if(isAllowed){
+        setTimeout(()=> $("adminCodeInput")?.focus(), 50);
+      }
     }
+  }
+
+  async function writeAdminLog(type, extra={}){
+    await addDoc(collection(db, "adminLogs"), {
+      type,
+      clientId,
+      path: location.pathname,
+      href: location.href,
+      ua: navigator.userAgent,
+      createdAt: serverTimestamp(),
+      ...extra
+    });
+  }
+
+  async function requestAdminAccess(){
+    await writeAdminLog("request_access");
+
+    await setDoc(doc(db, "adminAccess", clientId), {
+      clientId,
+      allowed: false,
+      requestedAt: serverTimestamp(),
+      updatedAt: serverTimestamp()
+    }, { merge: true });
+
+    alert("권한 요청이 접수되었습니다. 관리자 승인(allowed=true) 후 코드 입력창이 표시됩니다.");
+  }
+
+  async function adminLoginFromUI(){
+    if(!isAllowed){
+      alert("관리자 권한이 없습니다. 먼저 권한 요청 후 승인을 받아야 합니다.");
+      return;
+    }
+
+    const inp = $("adminCodeInput");
+    const code = (inp?.value || "").trim();
+    if(inp) inp.value = "";
+
+    await writeAdminLog("code_attempt", { ok: code === ADMIN_CODE });
+
+    if(code !== ADMIN_CODE){
+      alert("관리자 코드가 올바르지 않습니다.");
+      return;
+    }
+
+    isAdmin = true;
+    updateAdminUI();
+    alert("관리자 모드가 활성화되었습니다.");
+  }
+
+  async function adminLogoutFromUI(){
+    const was = isAdmin;
+    isAdmin = false;
+    updateAdminUI();
+    if(was) await writeAdminLog("logout");
+    alert("관리자 모드가 해제되었습니다.");
   }
 
   function updateAdminUI(){
     const stateText = $("adminStateText");
     const dot = $("adminDot");
     const fabText = $("adminFabText");
+
     const adminTab = $("adminTab");
-    const pendingList = $("pendingList");
+    const lockedBox = $("adminLockedBox");
+    const unlockedBox = $("adminUnlockedBox");
 
     if(isAdmin){
-      if(stateText) stateText.textContent = isMaster ? "MASTER" : "ADMIN ON";
+      if(stateText) stateText.textContent = "ADMIN ON";
       if(dot) dot.classList.add("on");
-      if(fabText) fabText.textContent = isMaster ? "총관리자" : "관리자 ON";
-    } else if(adminPending){
-      if(stateText) stateText.textContent = "승인 대기";
+      if(fabText) fabText.textContent = "관리자 ON";
+    } else if(isAllowed){
+      if(stateText) stateText.textContent = "CODE READY";
       if(dot) dot.classList.remove("on");
-      if(fabText) fabText.textContent = "승인 대기";
+      if(fabText) fabText.textContent = "관리자(권한됨)";
     } else {
       if(stateText) stateText.textContent = "LOCK";
       if(dot) dot.classList.remove("on");
       if(fabText) fabText.textContent = "관리자";
     }
 
-    // 관리자 전용 탭
+    // 권한 없으면 요청 UI, 권한 있으면 코드 UI
+    if(lockedBox) lockedBox.style.display = isAllowed ? "none" : "";
+    if(unlockedBox) unlockedBox.style.display = isAllowed ? "" : "none";
+
+    // 관리자 전용 탭/버튼
     if(adminTab){
       adminTab.style.display = isAdmin ? "" : "none";
       const activeView = document.querySelector(".view.active")?.id;
-      if(!isAdmin && activeView === "view-admin"){
-        setView("home");
-      }
+      if(!isAdmin && activeView === "view-admin") setView("home");
     }
 
-    // 관리자 전용 버튼
     document.querySelectorAll("[data-admin-only='true']").forEach(el => {
       el.disabled = !isAdmin;
       el.style.opacity = isAdmin ? "1" : ".55";
       el.style.cursor = isAdmin ? "pointer" : "not-allowed";
     });
-
-    // 총 관리자만 승인 리스트 노출
-    if(pendingList){
-      pendingList.style.display = isMaster ? "" : "none";
-    }
-  }
-
-  async function adminLoginFromUI(){
-    const inp = $("adminCodeInput");
-    const code = (inp?.value || "").trim();
-    if(inp) inp.value = "";
-
-    if(code === MASTER_ADMIN_CODE){
-      isMaster = true;
-      isAdmin = true;
-      adminPending = false;
-      updateAdminUI();
-      alert("총 관리자 모드로 로그인했습니다.");
-      setView("admin");
-      return;
-    }
-
-    if(code === ADMIN_REQUEST_CODE){
-      await setDoc(doc(db, "adminRequests", clientId), {
-        clientId,
-        status: "pending",
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp()
-      }, { merge: true });
-
-      isAdmin = false;
-      isMaster = false;
-      adminPending = true;
-      updateAdminUI();
-      alert("관리자 승인 요청이 접수되었습니다.\n총 관리자 승인을 기다려주세요.");
-      return;
-    }
-
-    alert("코드가 올바르지 않습니다.");
-  }
-
-  function adminLogoutFromUI(){
-    isAdmin = false;
-    isMaster = false;
-    adminPending = false;
-    updateAdminUI();
-    alert("관리자 상태가 해제되었습니다.");
   }
 
   /* =========================
@@ -1418,6 +1453,7 @@ td .pill{
      FIRESTORE WATCHERS
   ========================= */
   function startFirestoreWatchers(){
+    // 예약 데이터
     const maidQ = query(collection(db, "maidReservations"), orderBy("ts", "desc"), limit(500));
     onSnapshot(maidQ, (snap) => {
       maidReservations = snap.docs.map(d => {
@@ -1436,84 +1472,23 @@ td .pill{
       renderStatus();
     });
 
-    // 내 승인 상태 감시
-    onSnapshot(doc(db, "adminRequests", clientId), (snap) => {
-      if(!snap.exists()) return;
-      const v = snap.data();
-      if(v.status === "approved"){
-        isAdmin = true;
-        adminPending = false;
-        // 승인 받은 일반 관리자는 isMaster 유지 안 함
+    // 권한 문서 감시: adminAccess/{clientId}.allowed
+    onSnapshot(doc(db, "adminAccess", clientId), (snap) => {
+      if(!snap.exists()){
+        isAllowed = false;
+        if(isAdmin){ isAdmin = false; }
         updateAdminUI();
-      }else if(v.status === "pending"){
-        if(!isMaster){
-          isAdmin = false;
-          adminPending = true;
-          updateAdminUI();
-        }
-      }
-    });
-
-    // 총 관리자: pending 목록
-    const pendingQ = query(
-      collection(db, "adminRequests"),
-      where("status", "==", "pending"),
-      orderBy("updatedAt", "desc"),
-      limit(50)
-    );
-
-    onSnapshot(pendingQ, (snap) => {
-      const box = $("pendingList");
-      if(!box) return;
-
-      if(!isMaster){
-        box.innerHTML = "";
         return;
       }
+      const v = snap.data();
+      isAllowed = !!v.allowed;
 
-      if(snap.empty){
-        box.innerHTML = `<div class="muted-small">승인 대기 요청이 없습니다.</div>`;
-        return;
+      // 권한 회수되면 관리자 강제 OFF
+      if(!isAllowed && isAdmin){
+        isAdmin = false;
       }
 
-      box.innerHTML = "";
-      snap.docs.forEach(d => {
-        const v = d.data();
-        const created = v.createdAt?.toDate ? v.createdAt.toDate() : null;
-        const updated = v.updatedAt?.toDate ? v.updatedAt.toDate() : null;
-
-        const item = document.createElement("div");
-        item.className = "req-item";
-        item.innerHTML = `
-          <div class="req-meta">
-            <strong>요청자: ${v.clientId || d.id}</strong>
-            <div class="small">생성: ${created ? fmtTime(created) : "-"}</div>
-            <div class="small">업데이트: ${updated ? fmtTime(updated) : "-"}</div>
-          </div>
-          <div style="display:flex; gap:8px; align-items:center;">
-            <button class="btn primary small" type="button">승인</button>
-            <button class="btn ghost small" type="button">거절</button>
-          </div>
-        `;
-
-        const [approveBtn, rejectBtn] = item.querySelectorAll("button");
-        approveBtn.addEventListener("click", async () => {
-          await updateDoc(doc(db, "adminRequests", d.id), {
-            status: "approved",
-            approvedAt: serverTimestamp(),
-            approvedBy: clientId,
-            updatedAt: serverTimestamp()
-          });
-          alert("승인 완료");
-        });
-
-        rejectBtn.addEventListener("click", async () => {
-          await deleteDoc(doc(db, "adminRequests", d.id));
-          alert("거절(요청 삭제) 완료");
-        });
-
-        box.appendChild(item);
-      });
+      updateAdminUI();
     });
   }
 
@@ -1540,33 +1515,15 @@ td .pill{
   }
 
   /* =========================
-     HOME SLIDESHOW
-  ========================= */
-  function startHomeSlideshow(){
-    const a = $("slideA");
-    const b = $("slideB");
-    if(!a || !b) return;
-
-    let slideOnA = true;
-    const SLIDE_MS = 9000;
-
-    setInterval(() => {
-      slideOnA = !slideOnA;
-      a.classList.toggle("active", slideOnA);
-      b.classList.toggle("active", !slideOnA);
-    }, SLIDE_MS);
-  }
-
-  /* =========================
-     INIT (DOM 준비 후 실행)
+     INIT
   ========================= */
   document.addEventListener("DOMContentLoaded", () => {
-    // 탭 클릭 리스너
+    // 탭 클릭
     document.querySelectorAll(".tab-btn").forEach(btn => {
       btn.addEventListener("click", () => setView(btn.dataset.view));
     });
 
-    // Enter로 관리자 로그인
+    // Enter로 코드 입력 후 로그인
     document.addEventListener("keydown", (e) => {
       const panel = $("adminPanel");
       if(!panel?.classList.contains("open")) return;
@@ -1584,12 +1541,13 @@ td .pill{
       (initial === "admin" ? "admin" : "home")))
     );
 
-    // UI 기본
+    // UI 초기
     renderCart();
     renderStatus();
     updateAdminUI();
     startHomeSlideshow();
     startFirestoreWatchers();
+    setClientIdView();
   });
 
   /* =========================
@@ -1599,6 +1557,7 @@ td .pill{
   window.toggleTheme = toggleTheme;
 
   window.toggleAdminPanel = toggleAdminPanel;
+  window.requestAdminAccess = requestAdminAccess;
   window.adminLoginFromUI = adminLoginFromUI;
   window.adminLogoutFromUI = adminLogoutFromUI;
 
