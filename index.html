@@ -583,8 +583,8 @@ td .pill{
   <div class="side-card tip">
     <div class="side-title">TIP</div>
     <ul class="side-list">
-      <li>음식 최소 100개부터</li>
-      <li>펫 메뉴는 100% 예약제</li>
+      <li>일반 메뉴 최소 100개부터</li>
+      <li>펫 메뉴 최소 10개부터 (예약제)</li>
       <li>관리자 권한(true) 승인 후 관리자 탭 표시</li>
     </ul>
   </div>
@@ -624,8 +624,8 @@ td .pill{
           <div class="side-card tip" style="margin:0; box-shadow:none;">
             <div class="side-title">예약 규칙</div>
             <ul class="side-list" style="margin-bottom:0;">
-              <li>음식은 최소 100개부터</li>
-              <li>펫 메뉴는 100% 예약제</li>
+              <li>일반 메뉴는 최소 100개부터</li>
+              <li>펫 메뉴는 최소 10개부터 (100% 예약제)</li>
               <li>현황 탭에서 검색/집계 확인</li>
             </ul>
           </div>
@@ -705,14 +705,14 @@ td .pill{
     <!-- VIEW: FOOD -->
     <section id="view-food" class="view">
       <h1 class="page-title">음식 예약</h1>
-      <div class="page-sub">담기 방식 · 펫 메뉴는 예약제</div>
+      <div class="page-sub">담기 방식 · 일반 최소 100개 · 펫 최소 10개 (예약제)</div>
 
       <div class="food-layout">
 
         <section class="card">
           <div class="card-title">
             <strong>담기</strong>
-            <span class="badge">최소 100개</span>
+            <span class="badge">최소 수량 적용</span>
           </div>
 
           <div class="field">
@@ -723,7 +723,7 @@ td .pill{
                 <option value="strawberry">딸바 스무디 (200만원)</option>
                 <option value="toast">전남친 토스트 (100만원)</option>
               </optgroup>
-              <optgroup label="펫 메뉴 (100% 예약제 )">
+              <optgroup label="펫 메뉴 (100% 예약제 · 최소 10개)">
                 <option value="pet_water">펫 워터 (100만원 · 예약제)</option>
                 <option value="pet_mineral">펫 미네랄 워터 (200만원 · 예약제)</option>
                 <option value="cat_churu">캣츄르 (100만원 · 예약제)</option>
@@ -732,8 +732,9 @@ td .pill{
           </div>
 
           <div class="field">
-            <label>수량 (최소 100개)</label>
-            <input type="number" id="foodQty" value="100" min="100" step="1">
+            <label>수량 (일반 100 / 펫 10)</label>
+            <input type="number" id="foodQty" value="100" min="10" step="1">
+            <div class="note">※ 펫 메뉴를 선택하면 최소 수량이 10으로 자동 적용됩니다.</div>
           </div>
 
           <div class="row">
@@ -831,7 +832,7 @@ td .pill{
                   <th>날짜</th>
                   <th>시간</th>
                   <th>인원</th>
-                  <th>삭제</th><!-- ✅ 관리자만 버튼 표시 -->
+                  <th>삭제</th>
                 </tr>
               </thead>
               <tbody id="maidStatusBody"></tbody>
@@ -854,7 +855,7 @@ td .pill{
                   <th>디스코드</th>
                   <th>총합(억)</th>
                   <th>상세</th>
-                  <th>삭제</th><!-- ✅ 관리자만 버튼 표시 -->
+                  <th>삭제</th>
                 </tr>
               </thead>
               <tbody id="foodStatusBody"></tbody>
@@ -1088,7 +1089,6 @@ td .pill{
     getDocs,
     onSnapshot,
     query,
-    where,
     orderBy,
     limit,
     serverTimestamp,
@@ -1122,7 +1122,6 @@ td .pill{
   window.adminApproveAccess = () => {};
   window.adminDenyAccess = () => {};
 
-  /* ✅ 예약현황 개별 삭제(관리자) */
   window.adminDeleteMaidReservation = () => {};
   window.adminDeleteFoodOrder = () => {};
 
@@ -1148,30 +1147,23 @@ td .pill{
   ========================= */
   let isDark = false;
 
-  // 권한 승인 여부 (Firestore adminAccess/{clientId}.allowed)
   let isAllowed = false;
-  let allowedDoc = null; // ✅ 승인 문서 원본
+  let allowedDoc = null;
 
-  // 실제 관리자 ON 여부
   let isAdmin = false;
 
-  // Firestore 실시간 데이터
   let maidReservations = [];
   let foodOrders = [];
 
-  // ✅ 관리자 설정 데이터
   let configMaids = [];
   let configDates = [];
   let configTimes = [];
   let accessRequests = [];
 
-  // Cart
   let cart = [];
 
-  // DOM helper
   const $ = (id) => document.getElementById(id);
 
-  // clientId(유저 식별)
   const clientId = (() => {
     const key = "rw_client_id";
     let v = localStorage.getItem(key);
@@ -1207,6 +1199,14 @@ td .pill{
     pet_mineral: { name:'펫 미네랄 워터', price:200, type:'펫(예약제)' },
     cat_churu:   { name:'캣츄르', price:100, type:'펫(예약제)' },
   };
+
+  function isPetMenu(key){
+    return String(FOOD[key]?.type || "").includes("펫");
+  }
+
+  function getMinQtyByMenuKey(key){
+    return isPetMenu(key) ? 10 : 100;
+  }
 
   function assertAdmin(){
     if(!isAdmin){
@@ -1310,7 +1310,7 @@ td .pill{
     await setDoc(doc(db, "adminAccess", clientId), {
       clientId,
       allowed: false,
-      status: "pending",           // ✅ 대기/승인/거절
+      status: "pending",
       requestedAt: serverTimestamp(),
       updatedAt: serverTimestamp()
     }, { merge: true });
@@ -1331,7 +1331,6 @@ td .pill{
       return;
     }
 
-    // ✅ (선택) 승인 문서에 approvedRid/approvedNick가 있으면 일치 검증
     const ar = String(allowedDoc?.approvedRid || "").trim();
     const an = String(allowedDoc?.approvedNick || "").trim();
 
@@ -1339,7 +1338,6 @@ td .pill{
     if(ar || an){
       ok = (rid === ar && nick === an);
     }else{
-      // 승인(true)만 해도 로그인 가능 (입력값은 기록용)
       ok = true;
     }
 
@@ -1390,7 +1388,6 @@ td .pill{
       if(fabText) fabText.textContent = "관리자";
     }
 
-    // ✅ 승인되면 관리자 탭 표시
     if(adminTab){
       adminTab.style.display = isAllowed ? "" : "none";
       if(adminTabLock){
@@ -1398,22 +1395,18 @@ td .pill{
       }
     }
 
-    // 권한 없으면 요청 UI, 권한 있으면 로그인 UI
     if(lockedBox) lockedBox.style.display = isAllowed ? "none" : "";
     if(unlockedBox) unlockedBox.style.display = isAllowed ? "" : "none";
 
-    // 관리자 전용 버튼 잠금 처리
     document.querySelectorAll("[data-admin-only='true']").forEach(el => {
       el.disabled = !isAdmin;
       el.style.opacity = isAdmin ? "1" : ".55";
       el.style.cursor = isAdmin ? "pointer" : "not-allowed";
     });
 
-    // 관리자 해제됐는데 관리자 화면 보고 있으면 홈으로
     const activeView = document.querySelector(".view.active")?.id;
     if(!isAdmin && activeView === "view-admin") setView("home");
 
-    // 관리자 상태 변화 시 테이블들 갱신
     renderAdminAccessTable();
     renderStatus();
   }
@@ -1452,7 +1445,7 @@ td .pill{
 
     await addDoc(collection(db, "maidReservations"), {
       ts: serverTimestamp(),
-      clientId, // ✅ 내 것 구분
+      clientId,
       rid, name, discord, maid, date, time, people
     });
 
@@ -1464,18 +1457,35 @@ td .pill{
   /* =========================
      FOOD / CART
   ========================= */
+  function syncFoodQtyRule(){
+    const key = $("foodMenu")?.value;
+    const minQty = getMinQtyByMenuKey(key);
+    const qtyEl = $("foodQty");
+    if(!qtyEl) return;
+
+    qtyEl.min = String(minQty);
+
+    // 기본값도 메뉴에 맞게 자동 보정
+    const cur = parseInt(qtyEl.value, 10);
+    if(!Number.isFinite(cur) || cur < minQty){
+      qtyEl.value = minQty;
+    }
+  }
+
   function addToCart(){
     const key = $("foodMenu").value;
     const qty = parseInt($("foodQty").value, 10);
 
-    if(!Number.isFinite(qty) || qty < 100){
-      alert("음식 예약은 최소 100개부터 담을 수 있습니다.");
-      $("foodQty").value = 100;
-      return;
-    }
     const item = FOOD[key];
     if(!item){
       alert("메뉴를 선택해주세요.");
+      return;
+    }
+
+    const minQty = getMinQtyByMenuKey(key);
+    if(!Number.isFinite(qty) || qty < minQty){
+      alert(`${isPetMenu(key) ? "펫" : "일반"} 메뉴는 최소 ${minQty}개부터 담을 수 있습니다.`);
+      $("foodQty").value = minQty;
       return;
     }
 
@@ -1495,7 +1505,8 @@ td .pill{
     cart = [];
     renderCart();
     $("foodMenu").selectedIndex = 0;
-    $("foodQty").value = 100;
+    $("foodQty").value = 100;     // 기본은 일반 기준
+    syncFoodQtyRule();            // 혹시 모르니 룰 반영
   }
 
   function renderCart(){
@@ -1560,7 +1571,7 @@ td .pill{
 
     await addDoc(collection(db, "foodOrders"), {
       ts: serverTimestamp(),
-      clientId, // ✅ 내 것 구분
+      clientId,
       rid, name, discord,
       items: cart.map(i => ({...i})),
       totalManwon
@@ -1588,8 +1599,6 @@ td .pill{
 
   /* =========================
      STATUS RENDER
-     - 일반 유저: 내 것만
-     - 관리자 ON: 전체
   ========================= */
   function renderStatus(){
     const qv = ($("statusSearch")?.value || "").trim().toLowerCase();
@@ -1862,7 +1871,6 @@ td .pill{
      FIRESTORE WATCHERS
   ========================= */
   function startFirestoreWatchers(){
-    // 예약 데이터
     const maidQ = query(collection(db, "maidReservations"), orderBy("ts", "desc"), limit(500));
     onSnapshot(maidQ, (snap) => {
       maidReservations = snap.docs.map(d => {
@@ -1881,7 +1889,6 @@ td .pill{
       renderStatus();
     });
 
-    // 권한 문서 감시: adminAccess/{clientId}.allowed
     onSnapshot(doc(db, "adminAccess", clientId), (snap) => {
       if(!snap.exists()){
         allowedDoc = null;
@@ -1893,7 +1900,6 @@ td .pill{
       allowedDoc = snap.data() || null;
       isAllowed = !!allowedDoc.allowed;
 
-      // 권한 회수되면 관리자 강제 OFF
       if(!isAllowed && isAdmin){
         isAdmin = false;
       }
@@ -1953,12 +1959,13 @@ td .pill{
      INIT
   ========================= */
   document.addEventListener("DOMContentLoaded", () => {
-    // 탭 클릭
     document.querySelectorAll(".tab-btn").forEach(btn => {
       btn.addEventListener("click", () => setView(btn.dataset.view));
     });
 
-    // Enter로 로그인
+    // ✅ 메뉴 바뀌면 최소 수량 자동 적용
+    $("foodMenu")?.addEventListener("change", () => syncFoodQtyRule());
+
     document.addEventListener("keydown", (e) => {
       const panel = $("adminPanel");
       if(!panel?.classList.contains("open")) return;
@@ -1969,7 +1976,6 @@ td .pill{
       }
     });
 
-    // 초기 라우팅
     const initial = (location.hash || "#home").replace("#","");
     setView(
       initial === "food" ? "food" :
@@ -1978,17 +1984,18 @@ td .pill{
       (initial === "admin" ? "admin" : "home")))
     );
 
-    // UI 초기
     renderCart();
     renderStatus();
     updateAdminUI();
     startHomeSlideshow();
 
-    // Firestore watchers
     startFirestoreWatchers();
     startConfigWatchers();
 
     setClientIdView();
+
+    // ✅ 최초에도 룰 적용
+    syncFoodQtyRule();
   });
 
   /* =========================
@@ -2023,7 +2030,6 @@ td .pill{
   window.adminApproveAccess = adminApproveAccess;
   window.adminDenyAccess = adminDenyAccess;
 
-  /* ✅ 예약현황 개별 삭제 바인딩 */
   window.adminDeleteMaidReservation = adminDeleteMaidReservation;
   window.adminDeleteFoodOrder = adminDeleteFoodOrder;
 </script>
