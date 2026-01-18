@@ -1939,7 +1939,6 @@ td .pill{
 
       updateAdminUI();
     });
-  }
 
   function startConfigWatchers(){
     onSnapshot(query(collection(db, "config_maids"), orderBy("createdAt", "asc")), (snap) => {
