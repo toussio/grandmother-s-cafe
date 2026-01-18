@@ -1901,69 +1901,44 @@ td .pill{
       : `<tr><td colspan="5" class="muted-small">권한 요청이 없습니다.</td></tr>`;
   }
 
-  /* =========================
-     FIRESTORE WATCHERS
-  ========================= */
+function startFirestoreWatchers(){
+  // ✅ 메이드 예약 감시
+  const maidQ = query(collection(db, "maidReservations"), orderBy("ts", "desc"), limit(500));
   onSnapshot(maidQ, (snap) => {
-  maidReservations = snap.docs.map(d => {
-    const v = d.data();
-    return { id: d.id, ...v, ts: v.ts?.toDate ? v.ts.toDate() : null };
+    maidReservations = snap.docs.map(d => {
+      const v = d.data();
+      return { id: d.id, ...v, ts: v.ts?.toDate ? v.ts.toDate() : null };
+    });
+    renderStatus();
+    renderTimeSelect(); // ✅ 마감 반영
   });
-  renderStatus();
-  renderTimeSelect(); // ✅ 추가
-});
 
-    const foodQ = query(collection(db, "foodOrders"), orderBy("ts", "desc"), limit(500));
-    onSnapshot(foodQ, (snap) => {
-      foodOrders = snap.docs.map(d => {
-        const v = d.data();
-        return { id: d.id, ...v, ts: v.ts?.toDate ? v.ts.toDate() : null };
-      });
-      renderStatus();
+  // ✅ 음식 주문 감시
+  const foodQ = query(collection(db, "foodOrders"), orderBy("ts", "desc"), limit(500));
+  onSnapshot(foodQ, (snap) => {
+    foodOrders = snap.docs.map(d => {
+      const v = d.data();
+      return { id: d.id, ...v, ts: v.ts?.toDate ? v.ts.toDate() : null };
     });
+    renderStatus();
+  });
 
-    onSnapshot(doc(db, "adminAccess", clientId), (snap) => {
-      if(!snap.exists()){
-        allowedDoc = null;
-        isAllowed = false;
-        if(isAdmin) isAdmin = false;
-        updateAdminUI();
-        return;
-      }
-      allowedDoc = snap.data() || null;
-      isAllowed = !!allowedDoc.allowed;
-
-      if(!isAllowed && isAdmin){
-        isAdmin = false;
-      }
-
+  // ✅ 관리자 권한 감시
+  onSnapshot(doc(db, "adminAccess", clientId), (snap) => {
+    if(!snap.exists()){
+      allowedDoc = null;
+      isAllowed = false;
+      if(isAdmin) isAdmin = false;
       updateAdminUI();
-    });
+      return;
+    }
+    allowedDoc = snap.data() || null;
+    isAllowed = !!allowedDoc.allowed;
 
-  function startConfigWatchers(){
-    onSnapshot(query(collection(db, "config_maids"), orderBy("createdAt", "asc")), (snap) => {
-      configMaids = snap.docs.map(d => ({ id:d.id, ...d.data() })).filter(x => x.active !== false);
-      renderMaidSelect();
-      renderAdminMaidTable();
-    });
-
-    onSnapshot(query(collection(db, "config_maidDates"), orderBy("date", "asc")), (snap) => {
-      configDates = snap.docs.map(d => ({ id:d.id, ...d.data() })).filter(x => x.active !== false);
-      renderDateSelect();
-      renderAdminDateTable();
-    });
-
-    onSnapshot(query(collection(db, "config_maidTimes"), orderBy("time", "asc")), (snap) => {
-      configTimes = snap.docs.map(d => ({ id:d.id, ...d.data() })).filter(x => x.active !== false);
-      renderTimeSelect();
-      renderAdminTimeTable();
-    });
-
-    onSnapshot(query(collection(db, "adminAccess"), orderBy("updatedAt", "desc"), limit(300)), (snap) => {
-      accessRequests = snap.docs.map(d => ({ id:d.id, ...d.data() }));
-      renderAdminAccessTable();
-    });
-  }
+    if(!isAllowed && isAdmin) isAdmin = false;
+    updateAdminUI();
+  });
+}
 
   /* =========================
      전체 초기화(삭제) - 관리자만
