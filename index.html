@@ -1639,12 +1639,13 @@ td .pill{
           <td>${r.time || ""}</td>
           <td>${r.people ?? ""}</td>
           <td>
-            ${
-              isAdmin
-              ? `<button class="btn small ghost" type="button" onclick="adminDeleteMaidReservation('${r.id}')">삭제</button>`
-              : ``
-            }
-          </td>
+           ${
+                isAdmin
+                ? `<button class="btn small ghost" type="button" data-act="del-maid" data-id="${r.id}">삭제</button>`
+                 : ``
+              }
+            </td>
+
         </tr>
       `).join("")
       : `<tr><td colspan="9" class="muted-small">표시할 메이드 예약이 없습니다.</td></tr>`;
@@ -1671,12 +1672,13 @@ td .pill{
             <td>${manwonToEok(o.totalManwon || 0)}억</td>
             <td>${detail}</td>
             <td>
-              ${
-                isAdmin
-                ? `<button class="btn small ghost" type="button" onclick="adminDeleteFoodOrder('${o.id}')">삭제</button>`
-                : ``
-              }
-            </td>
+  ${
+    isAdmin
+    ? `<button class="btn small ghost" type="button" data-act="del-food" data-id="${o.id}">삭제</button>`
+    : ``
+  }
+</td>
+
           </tr>`;
       }).join("")
       : `<tr><td colspan="7" class="muted-small">표시할 음식 주문이 없습니다.</td></tr>`;
@@ -1992,6 +1994,22 @@ function startConfigWatchers(){
     document.querySelectorAll(".tab-btn").forEach(btn => {
       btn.addEventListener("click", () => setView(btn.dataset.view));
     });
+     
+document.addEventListener("click", (e) => {
+  // 버튼이 아니라 아이콘/글자 눌러도 버튼 찾게 해줌
+  const btn = e.target.closest("button[data-act]");
+  if(!btn) return;
+
+  // 문서 ID
+  const id = btn.dataset.id;
+  if(!id) return;
+
+  // 어떤 삭제인지 구분
+  const act = btn.dataset.act;
+
+  if(act === "del-maid") adminDeleteMaidReservation(id);
+  if(act === "del-food") adminDeleteFoodOrder(id);
+});
 
     // ✅ 메뉴 바뀌면 최소 수량 자동 적용
     $("foodMenu")?.addEventListener("change", () => syncFoodQtyRule());
@@ -2030,6 +2048,7 @@ function startConfigWatchers(){
     syncFoodQtyRule();
   });
 
+   
   /* =========================
      ✅ 전역(window) 바인딩
   ========================= */
