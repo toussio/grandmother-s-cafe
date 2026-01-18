@@ -1209,12 +1209,14 @@ td .pill{
   }
 
   function assertAdmin(){
-    if(!isAdmin){
-      alert("관리자 ON 후 사용 가능합니다.");
-      return false;
-    }
-    return true;
+  // ✅ 관리자 ON 이거나, ✅ allowed(권한승인) 이면 통과
+  if(!(isAdmin || isAllowed)){
+    alert("관리자 권한이 없습니다. (권한 요청 후 승인 필요)");
+    return false;
   }
+  return true;
+}
+
 
   /* =========================
      THEME
