@@ -1712,7 +1712,7 @@ td .pill{
   const selectedMaid = ($("maidName")?.value || "").trim();
   const selectedDate = ($("maidDate")?.value || "").trim();
 
-  // 메이드/날짜를 아직 안 골랐으면 그냥 시간 목록만
+  // 메이드/날짜 아직 선택 안했으면 그냥 시간만 표시
   if(!selectedMaid || !selectedDate){
     sel.innerHTML = `<option value="">선택해주세요</option>` +
       configTimes.map(t => `<option value="${t.time}">${t.time}</option>`).join("");
@@ -1720,26 +1720,26 @@ td .pill{
     return;
   }
 
-  // ✅ 이미 예약된 시간들(같은 메이드 + 같은 날짜)
+  // 이미 예약된 시간들(같은 메이드 + 같은 날짜)
   const booked = new Set(
     maidReservations
       .filter(r => r.maid === selectedMaid && r.date === selectedDate)
       .map(r => r.time)
   );
 
-  // ✅ 예약된 시간은 "⛔ 마감"으로 표시 + disabled(회색/선택불가)
+  // 예약된 시간은 disabled + ⛔ 마감 표시
   sel.innerHTML = `<option value="">선택해주세요</option>` +
     configTimes.map(t => {
       const isBooked = booked.has(t.time);
-      return `<option value="${t.time}" ${isBooked ? "disabled" : ""}>
-        ${isBooked ? `⛔ 마감 · ${t.time}` : t.time}
-      </option>`;
+      const text = isBooked ? ("⛔ 마감 · " + t.time) : t.time;   // ✅ 여기 중요(중첩 백틱 X)
+      return `<option value="${t.time}" ${isBooked ? "disabled" : ""}>${text}</option>`;
     }).join("");
 
-  // 기존 선택값 유지(가능할 때만)
+  // 기존 선택 유지(마감이면 선택 해제)
   const ok = [...sel.options].some(o => o.value === current && !o.disabled);
   sel.value = ok ? current : "";
 }
+
 
   /* =========================
      ADMIN CRUD: MAID/DATE/TIME
