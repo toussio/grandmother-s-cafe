@@ -1704,13 +1704,42 @@ td .pill{
   }
 
   function renderTimeSelect(){
-    const sel = $("maidTime");
-    if(!sel) return;
-    const current = sel.value;
+  const sel = $("maidTime");
+  if(!sel) return;
+
+  const current = sel.value;
+
+  const selectedMaid = ($("maidName")?.value || "").trim();
+  const selectedDate = ($("maidDate")?.value || "").trim();
+
+  // 메이드/날짜를 아직 안 골랐으면 그냥 시간 목록만
+  if(!selectedMaid || !selectedDate){
     sel.innerHTML = `<option value="">선택해주세요</option>` +
-      configTimes.map(t => `<option>${t.time}</option>`).join("");
+      configTimes.map(t => `<option value="${t.time}">${t.time}</option>`).join("");
     if([...sel.options].some(o => o.value === current)) sel.value = current;
+    return;
   }
+
+  // ✅ 이미 예약된 시간들(같은 메이드 + 같은 날짜)
+  const booked = new Set(
+    maidReservations
+      .filter(r => r.maid === selectedMaid && r.date === selectedDate)
+      .map(r => r.time)
+  );
+
+  // ✅ 예약된 시간은 "⛔ 마감"으로 표시 + disabled(회색/선택불가)
+  sel.innerHTML = `<option value="">선택해주세요</option>` +
+    configTimes.map(t => {
+      const isBooked = booked.has(t.time);
+      return `<option value="${t.time}" ${isBooked ? "disabled" : ""}>
+        ${isBooked ? `⛔ 마감 · ${t.time}` : t.time}
+      </option>`;
+    }).join("");
+
+  // 기존 선택값 유지(가능할 때만)
+  const ok = [...sel.options].some(o => o.value === current && !o.disabled);
+  sel.value = ok ? current : "";
+}
 
   /* =========================
      ADMIN CRUD: MAID/DATE/TIME
@@ -1875,15 +1904,14 @@ td .pill{
   /* =========================
      FIRESTORE WATCHERS
   ========================= */
-  function startFirestoreWatchers(){
-    const maidQ = query(collection(db, "maidReservations"), orderBy("ts", "desc"), limit(500));
-    onSnapshot(maidQ, (snap) => {
-      maidReservations = snap.docs.map(d => {
-        const v = d.data();
-        return { id: d.id, ...v, ts: v.ts?.toDate ? v.ts.toDate() : null };
-      });
-      renderStatus();
-    });
+  onSnapshot(maidQ, (snap) => {
+  maidReservations = snap.docs.map(d => {
+    const v = d.data();
+    return { id: d.id, ...v, ts: v.ts?.toDate ? v.ts.toDate() : null };
+  });
+  renderStatus();
+  renderTimeSelect(); // ✅ 추가
+});
 
     const foodQ = query(collection(db, "foodOrders"), orderBy("ts", "desc"), limit(500));
     onSnapshot(foodQ, (snap) => {
@@ -1970,7 +1998,9 @@ td .pill{
 
     // ✅ 메뉴 바뀌면 최소 수량 자동 적용
     $("foodMenu")?.addEventListener("change", () => syncFoodQtyRule());
-
+    $("maidName")?.addEventListener("change", () => renderTimeSelect());
+    $("maidDate")?.addEventListener("change", () => renderTimeSelect());
+     
     document.addEventListener("keydown", (e) => {
       const panel = $("adminPanel");
       if(!panel?.classList.contains("open")) return;
