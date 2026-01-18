@@ -1740,7 +1740,6 @@ td .pill{
   sel.value = ok ? current : "";
 }
 
-
   /* =========================
      ADMIN CRUD: MAID/DATE/TIME
   ========================= */
@@ -1937,6 +1936,30 @@ function startFirestoreWatchers(){
 
     if(!isAllowed && isAdmin) isAdmin = false;
     updateAdminUI();
+  });
+}
+function startConfigWatchers(){
+  onSnapshot(query(collection(db, "config_maids"), orderBy("createdAt", "asc")), (snap) => {
+    configMaids = snap.docs.map(d => ({ id:d.id, ...d.data() })).filter(x => x.active !== false);
+    renderMaidSelect();
+    renderAdminMaidTable();
+  });
+
+  onSnapshot(query(collection(db, "config_maidDates"), orderBy("date", "asc")), (snap) => {
+    configDates = snap.docs.map(d => ({ id:d.id, ...d.data() })).filter(x => x.active !== false);
+    renderDateSelect();
+    renderAdminDateTable();
+  });
+
+  onSnapshot(query(collection(db, "config_maidTimes"), orderBy("time", "asc")), (snap) => {
+    configTimes = snap.docs.map(d => ({ id:d.id, ...d.data() })).filter(x => x.active !== false);
+    renderTimeSelect();
+    renderAdminTimeTable();
+  });
+
+  onSnapshot(query(collection(db, "adminAccess"), orderBy("updatedAt", "desc"), limit(300)), (snap) => {
+    accessRequests = snap.docs.map(d => ({ id:d.id, ...d.data() }));
+    renderAdminAccessTable();
   });
 }
 
