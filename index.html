@@ -1443,6 +1443,11 @@ td .pill{
       return;
     }
 
+     if (maidReservations.some(r => r.maid === maid && r.date === date && r.time === time)) {
+  alert("이미 예약된 시간이에요");
+  return;
+}
+
     await addDoc(collection(db, "maidReservations"), {
       ts: serverTimestamp(),
       clientId,
